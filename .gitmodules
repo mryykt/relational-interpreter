@@ -1,0 +1,3 @@
+[submodule "miniKanren"]
+	path = miniKanren
+	url = git@github.com:webyrd/miniKanren-with-symbolic-constraints.git
