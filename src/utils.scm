@@ -1,6 +1,6 @@
 (load "miniKanren/mk.scm")
 
-(define (conso ca cd ls) (== (cons ca cd) ls))
+(define (conso ca cd ls) (== `(,ca . ,cd) ls))
 
 (define (caro ca ls) (fresh (x) (conso ca x ls)))
 
@@ -12,3 +12,11 @@
     (conde
       ((== x ca))
       ((membero x cd)))))
+
+(define (appendo l s out)
+  (conde
+    ((== l '()) (== s out))
+    ((fresh (ca cd tl)
+        (conso ca cd l)
+        (conso ca tl out)
+        (appendo cd s tl)))))
