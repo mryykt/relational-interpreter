@@ -1,4 +1,3 @@
-(load "miniKanren/mk-vicare.scm")
 (load "miniKanren/mk.scm")
 
 (define (conso ca cd ls) (== (cons ca cd) ls))
