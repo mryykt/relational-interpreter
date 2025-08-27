@@ -17,8 +17,7 @@
   [ ((((flip ,f) ,x) ,y) ((,f ,y) ,x)) ]
   [ ((((compose ,f) ,g) ,x) (,f (,g ,x))) ])
 
-  [ ((((foldl ,f) ,acc) ((cons ,x) ,xs)) (((foldl ,f) ((,f ,x) ,acc)) ,xs)) ]
-  [ ((((foldl ,f) ,acc) nil) ,acc) ]
-  [ ((((foldr ,f) ,init) ((cons ,x) ,xs)) ((,f ,x) (((foldr ,f) ,init) ,xs))) ]
-  [ ((((foldr ,f) ,init) nil) ,init) ]
-  [ ((((flip ,f) ,x) ,y) ((,f ,y) ,x)) ])
+(define (lst . elms)
+  (if
+    (null? elms) 'nil
+    `((cons ,(car elms)) ,(apply lst (cdr elms)))))
