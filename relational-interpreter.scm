@@ -10,6 +10,13 @@
   [ ((,m ,n) (,m ,n1)) (stepo n n1) ])
 
 (defmatche (contractiono exp val)
+  [ ((((foldl ,f) ,acc) ((cons ,x) ,xs)) (((foldl ,f) ((,f ,x) ,acc)) ,xs)) (=/= xs 'nil) ]
+  [ ((((foldl ,f) ,acc) ((cons ,x) nil)) ((,f ,x) ,acc)) ]
+  [ ((((foldr ,f) ,init) ((cons ,x) ,xs)) ((,f ,x) (((foldr ,f) ,init) ,xs))) (=/= xs 'nil) ]
+  [ ((((foldr ,f) ,init) ((cons ,x) nil)) ((,f ,x) ,init)) ]
+  [ ((((flip ,f) ,x) ,y) ((,f ,y) ,x)) ]
+  [ ((((compose ,f) ,g) ,x) (,f (,g ,x))) ])
+
   [ ((((foldl ,f) ,acc) ((cons ,x) ,xs)) (((foldl ,f) ((,f ,x) ,acc)) ,xs)) ]
   [ ((((foldl ,f) ,acc) nil) ,acc) ]
   [ ((((foldr ,f) ,init) ((cons ,x) ,xs)) ((,f ,x) (((foldr ,f) ,init) ,xs))) ]
