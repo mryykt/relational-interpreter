@@ -17,6 +17,26 @@
   [ ((((flip ,f) ,x) ,y) ((,f ,y) ,x)) ]
   [ ((((compose ,f) ,g) ,x) (,f (,g ,x))) ])
 
+
+(defrel (evalo exp val)
+  (conde
+    [ (fresh (f f-val acc val-acc xs xs-val acc^)
+      (== exp `(((foldl ,f) ,acc) ,xs))
+      (evalo f f-val) (evalo acc acc-val) (evalo xs xs-val)
+      (conde
+        [ (fresh (ca cd)
+          (== xs-val `((cons ,ca) ,cd))
+          (evalo `((,f-val ,ca) ,val-acc) acc^)
+          (evalo `(((foldl ,f-val) ,acc^) ,cd) val)) ]
+        [ (== xs-val 'nil) (== val val-acc) ])) ]
+    [ (fresh (ca cd val-ca)
+      (== exp `((cons ,ca) ,cd))
+      (evalo ca val-ca)
+      (== val `((cons ,val-ca) ,cd))) ]
+    [ (== exp 'nil) (== val 'nil) ]
+    [ (numbero exp) (== val exp) ]
+    [ (symbolo exp) (== val exp) ]))
+
 (define (lst . elms)
   (if
     (null? elms) 'nil
