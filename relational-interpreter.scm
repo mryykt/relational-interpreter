@@ -20,15 +20,10 @@
 
 (defrel (evalo exp val)
   (conde
-    [ (fresh (f f-val acc val-acc xs xs-val acc^)
+    [ (fresh (f f-val acc acc-val xs xs-val)
       (== exp `(((foldl ,f) ,acc) ,xs))
       (evalo f f-val) (evalo acc acc-val) (evalo xs xs-val)
-      (conde
-        [ (fresh (ca cd)
-          (== xs-val `((cons ,ca) ,cd))
-          (evalo `((,f-val ,ca) ,val-acc) acc^)
-          (evalo `(((foldl ,f-val) ,acc^) ,cd) val)) ]
-        [ (== xs-val 'nil) (== val val-acc) ])) ]
+      (foldlo f-val acc-val xs-val val)) ]
     [ (fresh (ca cd val-ca)
       (== exp `((cons ,ca) ,cd))
       (evalo ca val-ca)
@@ -36,6 +31,11 @@
     [ (== exp 'nil) (== val 'nil) ]
     [ (numbero exp) (== val exp) ]
     [ (symbolo exp) (== val exp) ]))
+
+(defrel (foldlo f acc xs res)
+  (matche xs
+    [nil (== acc res) ]
+    [ ((cons ,ca) ,cd) (fresh (acc^) (evalo `((,f ,ca) ,acc) acc^) (foldlo f acc^ cd res)) ]))
 
 (define (lst . elms)
   (if
