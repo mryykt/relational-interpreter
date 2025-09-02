@@ -14,6 +14,8 @@
   [ ((((foldl ,f) ,acc) ((cons ,x) nil)) ((,f ,x) ,acc)) ]
   [ ((((foldr ,f) ,init) ((cons ,x) ,xs)) ((,f ,x) (((foldr ,f) ,init) ,xs))) (=/= xs 'nil) ]
   [ ((((foldr ,f) ,init) ((cons ,x) nil)) ((,f ,x) ,init)) ]
+  [ (((map ,f) ((cons ,x) ,xs)) ((cons (,f ,x)) ((map ,f) ,xs))) (=/= xs 'nil) ]
+  [ (((map ,f) ((cons ,x) nil)) ((cons (,f ,x)) nil)) ]
   [ ((((flip ,f) ,x) ,y) ((,f ,y) ,x)) ]
   [ ((((compose ,f) ,g) ,x) (,f (,g ,x))) ])
 
