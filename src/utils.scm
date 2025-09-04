@@ -21,3 +21,12 @@
         (conso ca cd l)
         (conso ca tl out)
         (appendo cd s tl)))))
+
+(defrel (lookupo x env t)
+  (conde
+    ((fresh (y v rest)
+        (== `((,y . ,v) . ,rest) env) (== y x)
+        (== v t)))
+    ((fresh (y v rest)
+        (== `((,y . ,v) . ,rest) env) (=/= y x)
+        (lookupo x rest t)))))
