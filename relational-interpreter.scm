@@ -22,20 +22,21 @@
 
 (defrel (evalo exp val)
   (conde
-    [ (fresh (f f-val acc val-acc xs xs-val acc^)
+    [ (fresh (f f^ acc acc^ xs xs^ acc2)
       (== exp `(((foldl ,f) ,acc) ,xs))
-      (evalo f f-val) (evalo acc acc-val) (evalo xs xs-val)
-      (conde
-        [ (fresh (ca cd)
-          (== xs-val `((cons ,ca) ,cd))
-          (evalo `((,f-val ,ca) ,val-acc) acc^)
-          (evalo `(((foldl ,f-val) ,acc^) ,cd) val)) ]
-        [ (== xs-val 'nil) (== val val-acc) ])) ]
-    [ (fresh (ca cd val-ca)
+      (evalo f f^) (evalo acc acc^) (evalo xs xs^)
+      (matche xs^
+        [ (list ()) (== val acc^) ]
+        [ (list (,ca . ,cd))
+        (evalo `((,f^ ,ca) ,acc^) acc2)
+        (evalo `(((foldl ,f^) ,acc2) (list ,cd)) val) ])) ]
+    [ (fresh (ca cd ca^ cd^)
       (== exp `((cons ,ca) ,cd))
-      (evalo ca val-ca)
-      (== val `((cons ,val-ca) ,cd))) ]
-    [ (== exp 'nil) (== val 'nil) ]
+      (evalo ca ca^)
+      (evalo cd cd^)
+      (matche cd^
+        [ (list ,xs) (== val `(list (,ca^ . ,xs))) ])) ]
+    [ (caro 'list exp) (== val exp) ]
     [ (numbero exp) (== val exp) ]
     [ (symbolo exp) (== val exp) ]))
 
