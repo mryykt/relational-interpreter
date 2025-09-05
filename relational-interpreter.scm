@@ -60,7 +60,26 @@
     [ (numbero exp) (== val exp) ]
     [ (symbolo exp) (== val exp) ]))
 
-(define (lst . elms)
-  (if
-    (null? elms) 'nil
-    `((cons ,(car elms)) ,(apply lst (cdr elms)))))
+
+
+(load "miniKanren/test-check.scm")
+
+
+(define (run-test)
+  (begin
+    (test "foldl"
+      (run* (q) (evalo '(((foldl cons) (list ())) (list (1 2 3))) q))
+      '((list (3 2 1))))
+    (test "foldr"
+      (run* (q) (evalo '(((foldr cons) (list ())) (list (1 2 3))) q))
+      '((list (1 2 3))))
+    (test "flip"
+      (run* (q) (evalo '(((flip cons) (list ())) 1) q))
+      '((list (1))))
+    ; synthesis test
+    (test "reverse"
+      (run 1 (q) (evalo `(,q (list (1 2 3))) '(list (3 2 1))))
+      '(((foldl cons) (list ()))))
+    (test "append"
+      (run 1 (q) (evalo `((,q (list (1 2))) (list (3 4))) '(list (1 2 3 4))))
+      '((flip (foldr cons))))))
