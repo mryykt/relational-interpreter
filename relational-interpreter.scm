@@ -19,17 +19,37 @@
   [ ((((flip ,f) ,x) ,y) ((,f ,y) ,x)) ]
   [ ((((compose ,f) ,g) ,x) (,f (,g ,x))) ])
 
+(define (lst . elms)
+  (if
+    (null? elms) 'nil
+    `((cons ,(car elms)) ,(apply lst (cdr elms)))))
 
 (defrel (evalo exp val)
   (conde
-    [ (fresh (f f^ acc acc^ xs xs^ acc2)
+    [ (fresh (f acc acc^ xs xs^ acc2)
       (== exp `(((foldl ,f) ,acc) ,xs))
-      (evalo f f^) (evalo acc acc^) (evalo xs xs^)
+      (evalo acc acc^) (evalo xs xs^)
       (matche xs^
         [ (list ()) (== val acc^) ]
         [ (list (,ca . ,cd))
-        (evalo `((,f^ ,ca) ,acc^) acc2)
-        (evalo `(((foldl ,f^) ,acc2) (list ,cd)) val) ])) ]
+        (evalo `((,f ,ca) ,acc^) acc2)
+        (evalo `(((foldl ,f) ,acc2) (list ,cd)) val) ])) ]
+    [ (fresh (f init init^ xs xs^ acc)
+      (== exp `(((foldr ,f) ,init) ,xs))
+      (evalo init init^) (evalo xs xs^)
+      (matche xs^
+        [ (list ()) (== val init^) ]
+        [ (list (,ca . ,cd))
+        (evalo `(((foldr ,f) ,init^) (list ,cd)) acc)
+        (evalo `((,f ,ca) ,acc) val) ])) ]
+    [ (fresh (f x y x^ y^)
+      (== exp `(((flip ,f) ,x) ,y))
+      (evalo x x^) (evalo y y^)
+      (evalo `((,f ,y^) ,x^) val)) ]
+    [ (fresh (f g x x^)
+      (== exp `(((compose ,f) ,g) ,x))
+      (evalo x x^)
+      (evalo `(,f (,g ,x^)) val)) ]
     [ (fresh (ca cd ca^ cd^)
       (== exp `((cons ,ca) ,cd))
       (evalo ca ca^)
