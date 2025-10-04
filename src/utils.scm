@@ -1,5 +1,7 @@
 (load "miniKanren/mk-vicare.scm")
 (load "miniKanren/mk.scm")
+(load "miniKanren/numbers.scm")
+
 
 (define (conso ca cd ls) (== `(,ca . ,cd) ls))
 
@@ -30,3 +32,14 @@
     ((fresh (y v rest)
         (== `((,y . ,v) . ,rest) env) (=/= y x)
         (lookupo x rest t)))))
+
+(defrel (inco n m)
+  (pluso n (build-num 1) m))
+
+(defrel (deco n m)
+  (inco m n))
+
+(defrel (ntho n xs v)
+  (conde
+    [ (zeroo n) (caro v xs) ]
+    [ (fresh (n^ xs^) (deco n n^) (cdro xs^ xs) (nth n^ xs^ v)) ]))
