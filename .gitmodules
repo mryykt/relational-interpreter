@@ -1,3 +1,0 @@
-[submodule "miniKanren"]
-	path = miniKanren
-	url = git@github.com:michaelballantyne/faster-minikanren.git
