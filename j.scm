@@ -47,3 +47,20 @@
 
 (defrel (evalo exp v)
   (fresh (vm) (compileo exp '() vm) (vmo vm v)))
+
+(define (run-test)
+  (test "test-fun"
+    (run 1 (q) (evalo `(app (lam x (var x)) (num ,(build-num 1))) q))
+    '((1)))
+  (test "test-ifz-1"
+    (run 1 (q) (evalo `(ifz (num ,(build-num 0)) (num ,(build-num 1)) (num ,(build-num 2))) q))
+    `(,(build-num 1)))
+  (test "test-ifz-2"
+    (run 1 (q) (evalo `(ifz (num ,(build-num 1)) (num ,(build-num 1)) (num ,(build-num 2))) q))
+    `(,(build-num 2)))
+  (test "test-arithmetic"
+    (run 1 (q) (evalo `(+ (num ,(build-num 2)) (- (num ,(build-num 10)) (* (num ,(build-num 3)) (num ,(build-num 3))))) q))
+    `(,(build-num 3)))
+  (test "test-fix"
+    (run 1 (q) (evalo `(app (fix f n (ifz (var n) (num ,(build-num 1)) (* (var n) (app (var f) (- (var n) (num ,(build-num 1))))))) (num ,(build-num 4))) q))
+    `(,(build-num 24))))
