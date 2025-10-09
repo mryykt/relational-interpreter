@@ -64,22 +64,36 @@
 
 (load "miniKanren/test-check.scm")
 
+(define-syntax fn
+  (syntax-rules ()
+    ((_ f) (quasiquote (f)))
+    ((_ f a) (quasiquote (f a)))
+    ((_ f a b ...)
+      (fn (f a) b ...))))
 
 (define (run-test)
   (begin
     (test "foldl"
-      (run* (q) (evalo '(((foldl cons) (list ())) (list (1 2 3))) q))
+      (run* (q) (evalo (fn foldl cons (list ()) (list (1 2 3))) q))
       '((list (3 2 1))))
     (test "foldr"
-      (run* (q) (evalo '(((foldr cons) (list ())) (list (1 2 3))) q))
+      (run* (q) (evalo (fn foldr cons (list ()) (list (1 2 3))) q))
       '((list (1 2 3))))
     (test "flip"
-      (run* (q) (evalo '(((flip cons) (list ())) 1) q))
+      (run* (q) (evalo (fn flip cons (list ()) 1) q))
       '((list (1))))
     ; synthesis test
     (test "reverse"
       (run 1 (q) (evalo `(,q (list (1 2 3))) '(list (3 2 1))))
-      '(((foldl cons) (list ()))))
+      `(,(fn foldl cons (list ()))))
     (test "append"
       (run 1 (q) (evalo `((,q (list (1 2))) (list (3 4))) '(list (1 2 3 4))))
-      '((flip (foldr cons))))))
+      `(,(fn flip (foldr cons))))
+    ; 無理
+    ; (test "concat"
+    ;   (run 1 (q) (evalo `(,q (list (list (1 2)) (list (3 4)))) '(list (1 2 3 4))))
+    ;   '(((foldl (flip (foldr cons))) (list ()))))
+    ))
+
+(run 1 (q) (evalo (fn foldr (flip (foldr cons)) (list ())
+      (list (list (1 2)) (list (3 4)))) q))
