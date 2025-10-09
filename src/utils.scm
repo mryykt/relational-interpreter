@@ -42,4 +42,4 @@
 (defrel (ntho n xs v)
   (conde
     [ (zeroo n) (caro v xs) ]
-    [ (fresh (n^ xs^) (deco n n^) (cdro xs^ xs) (nth n^ xs^ v)) ]))
+    [ (fresh (n^ xs^) (deco n n^) (cdro xs^ xs) (ntho n^ xs^ v)) ]))
