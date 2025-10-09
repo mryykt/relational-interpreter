@@ -20,18 +20,30 @@
   [ (,a ,s ,e (pushenv . ,c) ,a (,e . ,s) ,e ,c) ]
   [ (,a (,e^ . ,s) ,e (popenv . ,c) ,a ,s ,e^ ,c) ]
   [ ((,i . ,e^) (,w . ,s) ,e (apply . ,c) (,i . ,e^) ,s ,e^^ ,c^) (appendo i c c^) (appendo e `((,i . ,e^) ,w) e^^) ]
-  [ (,a ,s ,e ((ldi ,n) . ,c) ,n ,s ,e ,c) ])
+  [ (,a ,s ,e ((ldi ,n) . ,c) ,n ,s ,e ,c) ]
+  [ (,n (,m . ,s) ,e (add . ,c) ,l ,s ,e ,c) (pluso n m l) ]
+  [ (,n (,m . ,s) ,e (sub . ,c) ,l ,s ,e ,c) (minuso n m l) ]
+  [ (,n (,m . ,s) ,e (mul . ,c) ,l ,s ,e ,c) (*o n m l) ]
+  [ (() ,s ,e ((test ,i ,j) . ,c) () ,s ,e ,c^) (appendo i c c^) ]
+  [ (,n ,s ,e ((test ,i ,j) . ,c) ,n ,s ,e ,c^) (=/= n '()) (appendo j c c^) ])
 
 (defrel (compileo pcf env vm)
   (matche pcf
-    [ (var ,x) (fresh (n) (== vm `((search ,n))) (nth n env x)) ]
+    [ (var ,x) (fresh (n) (symbolo x) (== vm `((search ,n))) (ntho n env x)) ]
     [ (app ,f ,v) (fresh (tl cf cv tl2) (== vm `(pushenv . ,tl))
       (compileo f env cf)
       (compileo v env cv)
       (appendo `(push . ,cf) `(apply popenv) tl2)
       (appendo cv tl2 tl)) ]
     [ (lam ,x ,t) (fresh (ct env^) (== vm `((mkclos ,ct))) (appendo env `(0 ,x) env^) (compileo t env^ ct)) ]
-    [ (num ,n) (== vm `((ldi ,n))) ]))
+    [ (fix ,f ,x ,t) (fresh (ct env^) (== vm `((mkclos ,ct))) (appendo env `(,f ,x) env^) (compileo t env^ ct)) ]
+    [ (num ,n) (== vm `((ldi ,n))) ]
+    [ (+ ,u ,v) (fresh (cu cv tl) (compileo u env cu) (compileo v env cv) (appendo cv `(push . ,tl) vm) (appendo cu `(add) tl)) ]
+    [ (- ,u ,v) (fresh (cu cv tl) (compileo u env cu) (compileo v env cv) (appendo cv `(push . ,tl) vm) (appendo cu `(sub) tl)) ]
+    [ (* ,u ,v) (fresh (cu cv tl) (compileo u env cu) (compileo v env cv) (appendo cv `(push . ,tl) vm) (appendo cu `(mul) tl)) ]
+    [ (ifz ,t ,u ,v) (fresh (ct cu cv)
+      (compileo t env ct) (compileo u env cu) (compileo v env cv)
+      (appendo ct `((test ,cu ,cv)) vm)) ]))
 
 (defrel (evalo exp v)
   (fresh (vm) (compileo exp '() vm) (vmo vm v)))
