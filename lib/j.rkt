@@ -19,7 +19,7 @@
            [(,a (,e^ . ,s) ,e (popenv . ,c) ,a ,s ,e^ ,c)]
            [((,i . ,e^) (,w . ,s) ,e (apply . ,c) (,i . ,e^) ,s ,e^^ ,c^)
             (appendo i c c^)
-            (appendo e `((,i . ,e^) ,w) e^^)]
+            (appendo e^ `((,i . ,e^) ,w) e^^)]
            [(,a ,s ,e ((ldi ,n) . ,c) ,n ,s ,e ,c)]
            [(,n (,m . ,s) ,e (add . ,c) ,l ,s ,e ,c) (pluso n m l)]
            [(,n (,m . ,s) ,e (sub . ,c) ,l ,s ,e ,c) (minuso n m l)]
