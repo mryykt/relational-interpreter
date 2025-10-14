@@ -7,6 +7,7 @@
 (provide vmo
          compileo
          evalo
+         traceo
          run-test)
 
 (defmatche (vm-stepo accum stack env code accum^ stack^ env^ code^)
@@ -32,6 +33,16 @@
         (fresh (a^ s^ e^ c^)
                (vm-stepo a s e c a^ s^ e^ c^)
                (matche c^ [() (== v a^)] [(,hd . ,tl) (vm-helpo a^ s^ e^ c^ v)])))
+
+(defrel (trace-vmo i v l) (trace-helpo (build-num 0) '() '() i v l))
+
+(defrel (trace-helpo a s e c v l)
+        (fresh (a^ s^ e^ c^ l^)
+               (vm-stepo a s e c a^ s^ e^ c^)
+               (== l `((,a ,s ,e ,c) . ,l^))
+               (matche c^
+                       [() (== v a^) (== l^ `((,a^ ,s^ ,e^ ,c^)))]
+                       [(,hd . ,tl) (trace-helpo a^ s^ e^ c^ v l^)])))
 
 (defrel
  (compileo pcf env vm)
@@ -75,6 +86,8 @@
                  (appendo ct `((test ,cu ,cv)) vm))]))
 
 (defrel (evalo exp v) (fresh (vm) (compileo exp '() vm) (vmo vm v)))
+
+(defrel (traceo exp v l) (fresh (vm) (compileo exp '() vm) (trace-vmo vm v l)))
 
 (define (run-test)
   (test "test-fun" (run 1 (q) (evalo `(app (lam x (var x)) (num ,(build-num 1))) q)) '((1)))
