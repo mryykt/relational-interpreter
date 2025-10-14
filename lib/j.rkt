@@ -50,11 +50,11 @@
          [(var ,x) (fresh (n) (symbolo x) (== vm `((search ,n))) (ntho n env x))]
          [(app ,f ,v)
           (fresh (tl cf cv tl2)
-                 (== vm `(pushenv . ,tl))
                  (compileo f env cf)
                  (compileo v env cv)
-                 (appendo `(push . ,cf) `(apply popenv) tl2)
-                 (appendo cv tl2 tl))]
+                 (== vm `(pushenv . ,tl))
+                 (appendo cv tl2 tl)
+                 (appendo `(push . ,cf) `(apply popenv) tl2))]
          [(lam ,x ,t)
           (fresh (ct env^) (== vm `((mkclos ,ct))) (appendo env `(0 ,x) env^) (compileo t env^ ct))]
          [(fix ,f ,x ,t)
