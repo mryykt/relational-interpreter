@@ -91,6 +91,11 @@
 
 (define (run-test)
   (test "test-fun" (run 1 (q) (evalo `(app (lam x (var x)) (num ,(build-num 1))) q)) '((1)))
+  (test "test-fun-2"
+        (run 1
+             (q)
+             (evalo `(app (app (lam x (lam y (var y))) (num ,(build-num 1))) (num ,(build-num 2))) q))
+        `(,(build-num 2)))
   (test "test-ifz-1"
         (run 1 (q) (evalo `(ifz (num ,(build-num 0)) (num ,(build-num 1)) (num ,(build-num 2))) q))
         `(,(build-num 1)))
