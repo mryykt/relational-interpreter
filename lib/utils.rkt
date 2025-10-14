@@ -36,5 +36,8 @@
 
 (defrel (deco n m) (inco m n))
 
-(defrel (ntho n xs v)
-        (conde [(zeroo n) (caro v xs)] [(fresh (n^ xs^) (deco n n^) (cdro xs^ xs) (ntho n^ xs^ v))]))
+(defrel (ntho n xs v) (nth-helpero '() n xs v))
+
+(defrel (nth-helpero n m xs v)
+        (conde [(== n m) (caro v xs)]
+               [(fresh (n^ xs^) (inco n n^) (cdro xs^ xs) (nth-helpero n^ m xs^ v))]))
