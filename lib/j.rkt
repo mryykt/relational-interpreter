@@ -24,6 +24,8 @@
            [(,n (,m . ,s) ,e (add . ,c) ,l ,s ,e ,c) (pluso n m l)]
            [(,n (,m . ,s) ,e (sub . ,c) ,l ,s ,e ,c) (minuso n m l)]
            [(,n (,m . ,s) ,e (mul . ,c) ,l ,s ,e ,c) (*o n m l)]
+           [(,n (,m . ,s) ,e (eq . ,c) ,l ,s ,e ,c)
+            (conde [(== n m) (== l '())] [(=/= n m) (== l '(1))])]
            [(() ,s ,e ((test ,i ,j) . ,c) () ,s ,e ,c^) (appendo i c c^)]
            [(,n ,s ,e ((test ,i ,j) . ,c) ,n ,s ,e ,c^) (=/= n '()) (appendo j c c^)])
 
@@ -78,6 +80,12 @@
                  (compileo v env cv)
                  (appendo cv `(push . ,tl) vm)
                  (appendo cu `(mul) tl))]
+         [(= ,u ,v)
+          (fresh (cu cv tl)
+                 (compileo u env cu)
+                 (compileo v env cv)
+                 (appendo cv `(push . ,tl) vm)
+                 (appendo cu `(eq) tl))]
          [(ifz ,t ,u ,v)
           (fresh (ct cu cv)
                  (compileo t env ct)
@@ -136,6 +144,6 @@
                              ,(build-num 1))
                        (var x))
                     q))
-        `(,(build-num 1))))
-
-(run 1 (q) (evalo `(app (app ,q (num ,(build-num 2))) (num ,(build-num 2))) (build-num 4)))
+        `(,(build-num 1)))
+  (test "test-eq-1" (run 1 (q) (evalo `(= (num ,(build-num 10)) (num ,(build-num 11))) q)) '((1)))
+  (test "test-eq-2" (run 1 (q) (evalo `(= (num ,(build-num 10)) (num ,(build-num 10))) q)) '(())))
