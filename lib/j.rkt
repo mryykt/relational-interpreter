@@ -62,30 +62,10 @@
          [(fix ,f ,x ,t)
           (fresh (ct env^) (== vm `((mkclos ,ct))) (appendo env `(,f ,x) env^) (compileo t env^ ct))]
          [(num ,n) (== vm `((ldi ,n)))]
-         [(+ ,u ,v)
-          (fresh (cu cv tl)
-                 (compileo u env cu)
-                 (compileo v env cv)
-                 (appendo cv `(push . ,tl) vm)
-                 (appendo cu `(add) tl))]
-         [(- ,u ,v)
-          (fresh (cu cv tl)
-                 (compileo u env cu)
-                 (compileo v env cv)
-                 (appendo cv `(push . ,tl) vm)
-                 (appendo cu `(sub) tl))]
-         [(* ,u ,v)
-          (fresh (cu cv tl)
-                 (compileo u env cu)
-                 (compileo v env cv)
-                 (appendo cv `(push . ,tl) vm)
-                 (appendo cu `(mul) tl))]
-         [(= ,u ,v)
-          (fresh (cu cv tl)
-                 (compileo u env cu)
-                 (compileo v env cv)
-                 (appendo cv `(push . ,tl) vm)
-                 (appendo cu `(eq) tl))]
+         [(+ ,u ,v) (binary-opo u v env 'add vm)]
+         [(- ,u ,v) (binary-opo u v env 'sub vm)]
+         [(* ,u ,v) (binary-opo u v env 'mul vm)]
+         [(= ,u ,v) (binary-opo u v env 'eq vm)]
          [(ifz ,t ,u ,v)
           (fresh (ct cu cv)
                  (compileo t env ct)
@@ -101,6 +81,13 @@
                  (appendo env `(,x) env^)
                  (appendo `(pushenv . ,ct) `(extend . ,tl) vm)
                  (appendo ce '(popenv) tl))]))
+
+(defrel (binary-opo l r env op c)
+        (fresh (cl cr tl)
+               (compileo l env cl)
+               (compileo r env cr)
+               (appendo cr `(push . ,tl) c)
+               (appendo cl `(,op) tl)))
 
 (defrel (evalo exp v) (fresh (vm) (compileo exp '() vm) (vmo vm v)))
 
