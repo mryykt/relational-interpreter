@@ -83,7 +83,16 @@
                  (compileo t env ct)
                  (compileo u env cu)
                  (compileo v env cv)
-                 (appendo ct `((test ,cu ,cv)) vm))]))
+                 (appendo ct `((test ,cu ,cv)) vm))]
+         [(let ,x
+            ,t
+            ,e)
+          (fresh (ct ce env^ tl)
+                 (compileo t env ct)
+                 (compileo t env^ ce)
+                 (appendo env `(,x) env^)
+                 (appendo `(pushenv . ,ct) `(extend . ,tl) vm)
+                 (appendo ce '(popenv) tl))]))
 
 (defrel (evalo exp v) (fresh (vm) (compileo exp '() vm) (vmo vm v)))
 
@@ -119,4 +128,14 @@
                                     (* (var n) (app (var f) (- (var n) (num ,(build-num 1)))))))
                           (num ,(build-num 4)))
                     q))
-        `(,(build-num 24))))
+        `(,(build-num 24)))
+  (test "test-let"
+        (run 1
+             (q)
+             (evalo `(let x (num
+                             ,(build-num 1))
+                       (var x))
+                    q))
+        `(,(build-num 1))))
+
+(run 1 (q) (evalo `(app (app ,q (num ,(build-num 2))) (num ,(build-num 2))) (build-num 4)))
