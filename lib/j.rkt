@@ -51,8 +51,8 @@
                        [(,hd . ,tl) (trace-helpo a^ s^ e^ c^ v l^)])))
 
 (defrel
- (compileo pcf env vm)
- (matche pcf
+ (compileo exp env vm)
+ (matche exp
          [(var ,x) (fresh (n) (symbolo x) (== vm `((search ,n))) (ntho n env x))]
          [(app ,f ,v)
           (fresh (tl cf cv tl2)
