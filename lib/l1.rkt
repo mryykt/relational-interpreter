@@ -6,7 +6,8 @@
 (require "test-check.rkt")
 (require minikanren/numbers)
 
-(provide typedo)
+(provide typedo
+         typed-evalo)
 
 (defrel
  (typedo exp env t)
@@ -36,6 +37,8 @@
      ,e1
      ,e2)
    (fresh (te1) (typedo e1 env te1) (typedo e2 `((,x . ,te1) . env) t))]))
+
+(defrel (typed-evalo exp t result) (typedo exp '() t) (evalo exp result))
 
 (define (run-test)
   (test "test-num" (run 1 (q) (typedo `(num ,(build-num 1)) '() q)) '(int))
