@@ -1,0 +1,78 @@
+#lang racket
+(require "j.rkt")
+(require minikanren)
+(require minikanren/matche)
+(require "utils.rkt")
+(require "test-check.rkt")
+(require minikanren/numbers)
+
+(provide typedo)
+
+(defrel
+ (typedo exp env t)
+ (matche
+  exp
+  [(var ,x) (lookupo x env t)]
+  [(app ,f ,u) (fresh (a) (typedo f env `(fun ,a ,t)) (typedo u env a))]
+  [(lam ,x ,u) (fresh (a b) (typedo u `((,x . ,a) . ,env) b) (== t `(fun ,a ,b)))]
+  [(fix ,f ,x ,u)
+   (fresh (a b) (typedo u `((,f . (fun ,a ,b)) . (,x . ,a) . ,env) b) (== t `(fun ,a ,b)))]
+  [(num ,n) (== t 'int)]
+  [(+ ,u ,v) (typedo u env 'int) (typedo v env 'int) (== t 'int)]
+  [(- ,u ,v) (typedo u env 'int) (typedo v env 'int) (== t 'int)]
+  [(* ,u ,v) (typedo u env 'int) (typedo v env 'int) (== t 'int)]
+  [(= ,u ,v) (fresh (a) (typedo u env a) (typedo v env a)) (== t 'int)]
+  [(list ,ls)
+   (fresh (t^)
+          (matche
+           ls
+           [() (== t `(list ,t^))]
+           [(,ca . ,cd) (typedo ca env t^) (typedo `(list ,cd) env `(list ,t^)) (== t `(list ,t^))]))]
+  [(cons ,ca ,cd) (fresh (t^) (typedo ca env t^) (typedo cd env `(list ,t^)) (== t `(list ,t^)))]
+  [(car ,ls) (typedo ls env `(list ,t))]
+  [(cdr ,ls) (typedo ls env t) (caro 'list t)]
+  [(ifz ,e ,u ,v) (typedo e env 'int) (typedo u env t) (typedo v env t)]
+  [(let ,x
+     ,e1
+     ,e2)
+   (fresh (te1) (typedo e1 env te1) (typedo e2 `((,x . ,te1) . env) t))]))
+
+(define (run-test)
+  (test "test-num" (run 1 (q) (typedo `(num ,(build-num 1)) '() q)) '(int))
+  (test "test-fun" (run 1 (q) (typedo '(app (lam x (var x)) (num ())) '() q)) '(int))
+  (test "test-fix"
+        (run 1
+             (q)
+             (typedo `(app (fix f
+                                n
+                                (ifz (var n)
+                                     (num ,(build-num 1))
+                                     (* (var n) (app (var f) (- (var n) (num ,(build-num 1)))))))
+                           (num ,(build-num 4)))
+                     '()
+                     q))
+        '(int))
+  (test "test-arithmetic"
+        (run 1
+             (q)
+             (typedo `(+ (num ,(build-num 2))
+                         (- (num ,(build-num 10)) (* (num ,(build-num 3)) (num ,(build-num 3)))))
+                     '()
+                     q))
+        '(int))
+  (test "test-list"
+        (run 1
+             (q)
+             (typedo `(app (lam x (cons (car (var x)) (cdr (var x)))) (list ((num ,(build-num 1)))))
+                     '()
+                     q))
+        '((list int)))
+  (test "test-let"
+        (run 1
+             (q)
+             (typedo `(let x (num
+                              ,(build-num 1))
+                        (var x))
+                     '()
+                     q))
+        '(int)))
