@@ -26,6 +26,10 @@
            [(,n (,m . ,s) ,e (mul . ,c) ,l ,s ,e ,c) (*o n m l)]
            [(,n (,m . ,s) ,e (eq . ,c) ,l ,s ,e ,c)
             (conde [(== n m) (== l '())] [(=/= n m) (== l '(1))])]
+           [(,n ,s ,e (nil . ,c) () ,s ,e ,c)]
+           [(,ca (,cd . ,s) ,e (cons . ,c) (,ca . ,cd) ,s ,e ,c)]
+           [((,ca . ,cd) ,s ,e (car . ,c) ,ca ,s ,e ,c)]
+           [((,ca . ,cd) ,s ,e (cdr . ,c) ,cd ,s ,e ,c)]
            [(() ,s ,e ((test ,i ,j) . ,c) () ,s ,e ,c^) (appendo i c c^)]
            [(,n ,s ,e ((test ,i ,j) . ,c) ,n ,s ,e ,c^) (=/= n '()) (appendo j c c^)])
 
@@ -66,6 +70,11 @@
          [(- ,u ,v) (binary-opo u v env 'sub vm)]
          [(* ,u ,v) (binary-opo u v env 'mul vm)]
          [(= ,u ,v) (binary-opo u v env 'eq vm)]
+         [(list ,ls)
+          (matche ls [() (== vm '(nil))] [(,ca . ,cd) (binary-opo ca `(list ,cd) env 'cons vm)])]
+         [(cons ,ca ,cd) (binary-opo ca cd env 'cons vm)]
+         [(car ,ls) (fresh (cls) (compileo ls env cls) (appendo cls '(car) vm))]
+         [(cdr ,ls) (fresh (cls) (compileo ls env cls) (appendo cls '(cdr) vm))]
          [(ifz ,t ,u ,v)
           (fresh (ct cu cv)
                  (compileo t env ct)
@@ -133,4 +142,42 @@
                     q))
         `(,(build-num 1)))
   (test "test-eq-1" (run 1 (q) (evalo `(= (num ,(build-num 10)) (num ,(build-num 11))) q)) '((1)))
-  (test "test-eq-2" (run 1 (q) (evalo `(= (num ,(build-num 10)) (num ,(build-num 10))) q)) '(())))
+  (test "test-eq-2" (run 1 (q) (evalo `(= (num ,(build-num 10)) (num ,(build-num 10))) q)) '(()))
+  (test "test-list"
+        (run 1 (q) (evalo `(list ((num ,(build-num 1)) (num ,(build-num 2)) (num ,(build-num 3)))) q))
+        `((,(build-num 1) ,(build-num 2) ,(build-num 3))))
+  (test "test-car"
+        (run 1
+             (q)
+             (evalo `(car (list ((num ,(build-num 1)) (num ,(build-num 2)) (num ,(build-num 3))))) q))
+        `(,(build-num 1)))
+  (test "test-cdr"
+        (run 1
+             (q)
+             (evalo `(cdr (list ((num ,(build-num 1)) (num ,(build-num 2)) (num ,(build-num 3))))) q))
+        `((,(build-num 2) ,(build-num 3))))
+  (test "test-list-length"
+        (run 1
+             (q)
+             (evalo `(app (fix f
+                               x
+                               (ifz (= (var x) (list ()))
+                                    (num ,(build-num 0))
+                                    (+ (num ,(build-num 1)) (app (var f) (cdr (var x))))))
+                          (list ((num ,(build-num 1)) (num ,(build-num 2)) (num ,(build-num 3)))))
+                    q))
+        `(,(build-num 3)))
+  (test "test-list-append"
+        (run 1
+             (q)
+             (evalo `(app (app (fix f
+                                    x
+                                    (lam y
+                                         (ifz (= (var x) (list ()))
+                                              (var y)
+                                              (cons (car (var x))
+                                                    (app (app (var f) (cdr (var x))) (var y))))))
+                               (list ((num ,(build-num 1)) (num ,(build-num 2)))))
+                          (list ((num ,(build-num 3)))))
+                    q))
+        `((,(build-num 1) ,(build-num 2) ,(build-num 3)))))
