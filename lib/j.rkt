@@ -86,7 +86,7 @@
             ,e)
           (fresh (ct ce env^ tl)
                  (compileo t env ct)
-                 (compileo t env^ ce)
+                 (compileo e env^ ce)
                  (appendo env `(,x) env^)
                  (appendo `(pushenv . ,ct) `(extend . ,tl) vm)
                  (appendo ce '(popenv) tl))]))
@@ -100,7 +100,7 @@
 
 (defrel (evalo exp v) (fresh (vm) (compileo exp '() vm) (vmo vm v)))
 
-(defrel (traceo exp v l) (fresh (vm) (compileo exp '() vm) (trace-vmo vm v l)))
+(defrel (traceo exp l) (fresh (vm v) (compileo exp '() vm) (trace-vmo vm v l)))
 
 (define (run-test)
   (test "test-fun" (run 1 (q) (evalo `(app (lam x (var x)) (num ,(build-num 1))) q)) '((1)))
@@ -133,12 +133,21 @@
                           (num ,(build-num 4)))
                     q))
         `(,(build-num 24)))
-  (test "test-let"
+  (test "test-let-1"
         (run 1
              (q)
              (evalo `(let x (num
                              ,(build-num 1))
                        (var x))
+                    q))
+        `(,(build-num 1)))
+  (test "test-let-2"
+        (run 1
+             (q)
+             (evalo `(let f (lam
+                             x
+                             [var x])
+                       (app (var f) (num ,(build-num 1))))
                     q))
         `(,(build-num 1)))
   (test "test-eq-1" (run 1 (q) (evalo `(= (num ,(build-num 10)) (num ,(build-num 11))) q)) '((1)))
