@@ -47,27 +47,31 @@
         ,f1
         ,(make-program f2 ...))]))
 
+(define-syntax apps
+  (syntax-rules ()
+    [(_ f) f]
+    [(_ f x) `(app f x)]
+    [(_ f x y ...) (apps (app f x) y ...)]))
+
 (define (run-test)
-  (test "cons"
-        (run 1
-             (q)
-             (evalo (make-program consf (app (app (var cons) (num ,(build-num 1))) ,(list-c 2 3))) q))
-        `(,(list-v 1 2 3)))
+  (test
+   "cons"
+   (run 1 (q) (evalo (make-program consf ,(apps (var cons) (num ,(build-num 1)) ,(list-c 2 3))) q))
+   `(,(list-v 1 2 3)))
   (test "foldl"
         (run 1
              (q)
-             (evalo (make-program foldlf
-                                  flipf
-                                  consf
-                                  (app (app (app (var foldl) (app (var flip) (var cons))) (list ()))
-                                       ,(list-c 1 2 3)))
-                    q))
+             (evalo
+              (make-program foldlf
+                            flipf
+                            consf
+                            ,(apps (var foldl) (app (var flip) (var cons)) (list ()) ,(list-c 1 2 3)))
+              q))
         `(,(list-v 3 2 1)))
-  (test "foldr"
-        (run 1
-             (q)
-             (evalo (make-program foldrf
-                                  consf
-                                  (app (app (app (var foldr) (var cons)) (list ())) ,(list-c 1 2 3)))
-                    q))
-        `(,(list-v 1 2 3))))
+  (test
+   "foldr"
+   (run 1
+        (q)
+        (evalo (make-program foldrf consf ,(apps (var foldr) (var cons) (list ()) ,(list-c 1 2 3)))
+               q))
+   `(,(list-v 1 2 3))))
