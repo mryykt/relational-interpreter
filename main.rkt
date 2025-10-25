@@ -1,5 +1,5 @@
 #lang racket
-(require "lib/j.rkt")
+(require "lib/compile-vm.rkt")
 
 (provide vmo
          compileo

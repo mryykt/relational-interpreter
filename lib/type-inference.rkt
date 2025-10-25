@@ -1,5 +1,5 @@
 #lang racket
-(require "j.rkt")
+(require "compile-vm.rkt")
 (require minikanren)
 (require minikanren/matche)
 (require "utils.rkt")
