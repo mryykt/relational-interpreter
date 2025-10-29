@@ -79,10 +79,6 @@
     (test "append"
           (run 1 (q) (evalo `((,q (list (1 2))) (list (3 4))) '(list (1 2 3 4))))
           `(,(fn flip (foldr cons))))
-    ; 無理
-    ; (test "concat"
-    ;   (run 1 (q) (evalo `(,q (list (list (1 2)) (list (3 4)))) '(list (1 2 3 4))))
-    ;   '(((foldl (flip (foldr cons))) (list ()))))
-    ))
-
-(run 1 (q) (evalo (fn foldr (flip (foldr cons)) (list ()) (list (list (1 2)) (list (3 4)))) q))
+    (test "concat"
+          (run 1 (q) (evalo `(,q (list ((list (1 2)) (list (3 4))))) '(list (1 2 3 4))))
+          '(((foldl (foldr cons)) (list ()))))))
