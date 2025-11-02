@@ -10,12 +10,12 @@
         (matche exp
                 [(var ,x) (lookupo x env v)]
                 [(app ,f ,u)
-                 (fresh (x t env^ uv)
-                        (evalo^ f env `((,x . ,t) . ,env^))
+                 (fresh (x t env^ uv g)
+                        (evalo^ f env `((,g ,x ,t) . ,env^))
                         (evalo^ u env uv)
-                        (evalo^ t `((,x . ,uv) . ,env^) v))]
-                [(lam ,x ,t) (== v `((,x . ,t) . ,env))]
-                [(fix ,f ,x ,t) (evalo^ `(var ,f) `((,f . ((,x . ,t) . ,env)) . ,env) v)]
+                        (evalo^ t `((,g . ((,g ,x ,t) . ,env^)) (,x . ,uv) . ,env^) v))]
+                [(lam ,x ,t) (== v `((0 ,x ,t) . ,env))]
+                [(fix ,f ,x ,t) (evalo^ `(var ,f) `((,f . ((,f ,x ,t) . ,env)) . ,env) v)]
                 [(num ,n) (== v n)]
                 [(+ ,l ,r) (binary-op l r env pluso v)]
                 [(- ,l ,r) (binary-op l r env minuso v)]
