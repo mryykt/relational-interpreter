@@ -6,32 +6,34 @@
 (require "utils.rkt")
 (require "test-check.rkt")
 
-(defrel
- (evalo^ exp env v)
- (matche exp
-         [(var ,x) (symbolo x) (lookupo x env v)]
-         [(app ,f ,u)
-          (fresh (x t env^ uv)
-                 (evalo^ f env `((,x . ,t) . ,env^))
-                 (evalo^ u env uv)
-                 (evalo^ t `((,x . ,uv) . ,env^) v))]
-         [(lam ,x ,t) (== v `((,x . ,t) . ,env))]
-         [(fix ,f ,x ,t) (== v `((,x . ,t) . ((,f . ((,x . ,t) . ,env)) . ,env)))]
-         [(num ,n) (== v n)]
-         [(+ ,l ,r) (binary-op l r env pluso v)]
-         [(- ,l ,r) (binary-op l r env minuso v)]
-         [(* ,l ,r) (binary-op l r env *o v)]
-         [(= ,l ,r) (binary-op l r env eqo v)]
-         [(list ,ls) (matche ls [() (== v '())] [(,ca . ,cd) (binary-op ca `(list ,cd) env conso v)])]
-         [(cons ,ca ,cd) (binary-op ca cd env conso v)]
-         [(car ,ls) (fresh (lsv) (evalo^ ls env lsv) (caro v lsv))]
-         [(cdr ,ls) (fresh (lsv) (evalo^ ls env lsv) (cdro v lsv))]
-         [(ifz ,t ,e1 ,e2)
-          (fresh (tv) (evalo^ t env tv) (matche tv [() (evalo^ e1 env v)] [(1) (evalo^ e2 env v)]))]
-         [(let ,x
-            ,t
-            ,e)
-          (fresh (tv ce env^ tl) (evalo^ t env tv) (evalo^ e `((,x . ,tv) . ,env) v))]))
+(defrel (evalo^ exp env v)
+        (matche exp
+                [(var ,x) (lookupo x env v)]
+                [(app ,f ,u)
+                 (fresh (x t env^ uv)
+                        (evalo^ f env `((,x . ,t) . ,env^))
+                        (evalo^ u env uv)
+                        (evalo^ t `((,x . ,uv) . ,env^) v))]
+                [(lam ,x ,t) (== v `((,x . ,t) . ,env))]
+                [(fix ,f ,x ,t) (evalo^ `(var ,f) `((,f . ((,x . ,t) . ,env)) . ,env) v)]
+                [(num ,n) (== v n)]
+                [(+ ,l ,r) (binary-op l r env pluso v)]
+                [(- ,l ,r) (binary-op l r env minuso v)]
+                [(* ,l ,r) (binary-op l r env *o v)]
+                [(= ,l ,r) (binary-op l r env eqo v)]
+                [(list ,ls)
+                 (matche ls [() (== v '())] [(,ca . ,cd) (binary-op ca `(list ,cd) env conso v)])]
+                [(cons ,ca ,cd) (binary-op ca cd env conso v)]
+                [(car ,ls) (fresh (lsv) (evalo^ ls env lsv) (caro v lsv))]
+                [(cdr ,ls) (fresh (lsv) (evalo^ ls env lsv) (cdro v lsv))]
+                [(ifz ,t ,e1 ,e2)
+                 (fresh (tv)
+                        (evalo^ t env tv)
+                        (conde [(== tv '()) (evalo^ e1 env v)] [(=/= tv '()) (evalo^ e2 env v)]))]
+                [(let ,x
+                   ,t
+                   ,e)
+                 (fresh (tv ce env^ tl) (evalo^ t env tv) (evalo^ e `((,x . ,tv) . ,env) v))]))
 
 (defrel (eqo l r v) (conde [(== l r) (== v '())] [(=/= l r) (== v '(1))]))
 
