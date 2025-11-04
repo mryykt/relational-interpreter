@@ -13,7 +13,7 @@
  (typedo exp env t)
  (matche
   exp
-  [(var ,x) (lookupo x env t)]
+  [(var ,x) (symbolo x) (lookupo x env t)]
   [(app ,f ,u) (fresh (a) (typedo f env `(fun ,a ,t)) (typedo u env a))]
   [(lam ,x ,u) (fresh (a b) (typedo u `((,x . ,a) . ,env) b) (== t `(fun ,a ,b)))]
   [(fix ,f ,x ,u)
@@ -36,7 +36,7 @@
   [(let ,x
      ,e1
      ,e2)
-   (fresh (te1) (typedo e1 env te1) (typedo e2 `((,x . ,te1) . env) t))]))
+   (fresh (te1) (typedo e1 env te1) (typedo e2 `((,x . ,te1) . ,env) t))]))
 
 (defrel (typed-evalo exp t result) (typedo exp '() t) (evalo exp result))
 
@@ -75,7 +75,9 @@
              (q)
              (typedo `(let x (num
                               ,(build-num 1))
-                        (var x))
+                        (let y (num
+                                ,(build-num 1))
+                          (+ (var x) (var y))))
                      '()
                      q))
         '(int)))
