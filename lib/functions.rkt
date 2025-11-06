@@ -2,7 +2,7 @@
 (require syntax/parse/define)
 (require minikanren)
 (require minikanren/numbers)
-(require "compile-vm.rkt")
+(require "interpreter.rkt")
 (require "test-check.rkt")
 (require "helper.rkt")
 
