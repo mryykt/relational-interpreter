@@ -5,10 +5,11 @@
 (require minikanren/numbers)
 (require "utils.rkt")
 (require "test-check.rkt")
+(provide evalo)
 
 (defrel (evalo^ exp env v)
         (matche exp
-                [(var ,x) (lookupo x env v)]
+                [(var ,x) (symbolo x) (lookupo x env v)]
                 [(app ,f ,u)
                  (fresh (x t env^ uv g)
                         (evalo^ f env `((,g ,x ,t) . ,env^))
