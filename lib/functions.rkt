@@ -6,6 +6,13 @@
 (require "test-check.rkt")
 (require "helper.rkt")
 
+(provide consf
+         flipf
+         foldlf
+         foldrf
+         make-program
+         run-test)
+
 (define consf '(lam x (lam y (cons (var x) (var y)))))
 
 (define flipf '(lam f (lam x (lam y (app (app (var f) (var y)) (var x))))))
