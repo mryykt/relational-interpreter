@@ -9,7 +9,7 @@
      (begin
        (printf "Testing ~s\n" title)
        (let* ([expected expected-result]
-              [produced tested-expression])
+              [produced (time tested-expression)])
          (or (equal? expected produced)
              (begin
                (test-failed #t)
