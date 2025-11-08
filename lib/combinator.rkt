@@ -1,6 +1,7 @@
 #lang racket
 (require minikanren)
 (require minikanren/matche)
+(require minikanren/numbers)
 (require "interpreter.rkt")
 (require "functions.rkt")
 (require "helper.rkt")
@@ -49,12 +50,8 @@
     (q)
     (combinator q '(list int) (foldrf foldlf flipf consf) (,(list-c '(1 2) '(3 4))) (list-v 1 2 3 4)))
    '(((foldl (flip (foldr cons))) ())))
-  (test "map"
-        (run 1
-             (q)
-             (combinator q
-                         '(list (list int))
-                         (foldrf composef flipf consf)
-                         ((lam x (cons (var x) (list ()))) ,(list-c 1 2))
-                         (list-v '(1) '(2))))
-        '()))
+  (let ([+f '(lam x (lam y (+ (var x) (var y))))]
+        [0f '(lam x (num ()))])
+    (test "sum"
+          (run 1 (q) (combinator q 'int (foldlf +f 0f) (,(list-c 1 2 3)) (build-num 6)))
+          '(((foldl +) (|0| +))))))
