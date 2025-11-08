@@ -25,6 +25,12 @@
 
 (define-syntax combinator
   (syntax-rules ()
+    [(_ src t (function ...))
+     (fresh (__dst __program __dummy)
+            (translateo src __dst)
+            (== __program (make-program function ... ,__dst))
+            (typedo __program '() t)
+            (evalo __program __dummy))]
     [(_ src t (function ...) (input ...) output)
      (fresh (__dst __program)
             (translateo src __dst)
@@ -50,8 +56,18 @@
     (q)
     (combinator q '(list int) (foldrf foldlf flipf consf) (,(list-c '(1 2) '(3 4))) (list-v 1 2 3 4)))
    '(((foldl (flip (foldr cons))) ())))
+  (test "concat-type"
+        (run 2 (q) (combinator q `(fun (list (list int)) (list int)) (foldrf foldlf flipf consf)))
+        '(((foldl (foldr cons)) ()) ((foldl (foldr (flip cons))) ())))
   (let ([+f '(lam x (lam y (+ (var x) (var y))))]
         [0f '(lam x (num ()))])
     (test "sum"
           (run 1 (q) (combinator q 'int (foldlf +f 0f) (,(list-c 1 2 3)) (build-num 6)))
-          '(((foldl +) (|0| +))))))
+          '(((foldl +) (|0| +)))))
+  (test "map"
+        (run 1
+             (q)
+             (combinator q
+                         `(fun (fun int (list int)) (fun (list int) (list (list int))))
+                         (foldrf composef flipf consf)))
+        '()))
