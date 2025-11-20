@@ -16,6 +16,7 @@
          make-program
          run-test)
 
+; basic combinator
 (define consf '(lam x (lam y (cons (var x) (var y)))))
 
 (define flipf '(lam f (lam x (lam y (app (app (var f) (var y)) (var x))))))
@@ -64,6 +65,18 @@
                                   [var acc])
                          (cons (var acc2)
                                (app (app (app (var f) (var g)) (var acc2)) (cdr (var xs))))))))))
+
+(define appendf
+  `(let foldr
+     ,foldrf
+     (lam xs (lam ys ,(apps (var foldr) (lam x (lam y (cons (var x) (var y)))) (var ys) (var xs))))))
+
+(define concatf
+  `(let foldl
+     ,foldlf
+     (let append
+       ,appendf
+       (lam xs ,(apps (var foldl) (var append) (list ()) (var xs))))))
 
 (define (symbol-trim-last sym)
   (let* ([s (symbol->string sym)]
@@ -133,4 +146,10 @@
                      scanlf
                      ,(apps (var scanl) (lam x (lam y (+ (var x) (var y)))) (num ()) ,(list-c 1 2 3)))
                     q))
-        `(,(list-v 1 3 6))))
+        `(,(list-v 1 3 6)))
+  (test "append"
+        (run 1 (q) (evalo (make-program appendf ,(apps (var append) ,(list-c 1 2) ,(list-c 3 4))) q))
+        `(,(list-v 1 2 3 4)))
+  (test "concat"
+        (run 1 (q) (evalo (make-program concatf ,(apps (var concat) ,(list-c '(1) '(2)))) q))
+        `(,(list-v 1 2))))
