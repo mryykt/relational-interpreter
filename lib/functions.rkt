@@ -12,6 +12,7 @@
          foldlf
          foldrf
          mapf
+         scanlf
          make-program
          run-test)
 
@@ -48,6 +49,21 @@
              (ifz (= (var xs) (list ()))
                   (list ())
                   (cons (app (var g) (car (var xs))) (app (app (var f) (var g)) (cdr (var xs))))))))
+
+(define scanlf
+  '(fix f
+        g
+        (lam acc
+             (lam xs
+                  (ifz (= (var xs) (list ()))
+                       (list ())
+                       (let acc2 (app
+                                  [app
+                                   (var g)
+                                   (car (var xs))]
+                                  [var acc])
+                         (cons (var acc2)
+                               (app (app (app (var f) (var g)) (var acc2)) (cdr (var xs))))))))))
 
 (define (symbol-trim-last sym)
   (let* ([s (symbol->string sym)]
@@ -109,4 +125,12 @@
              (evalo (make-program mapf
                                   ,(apps (var map) (lam x (cons (var x) (list ()))) ,(list-c 1 2 3)))
                     q))
-        `(,(list-v '(1) '(2) '(3)))))
+        `(,(list-v '(1) '(2) '(3))))
+  (test "scanl"
+        (run 1
+             (q)
+             (evalo (make-program
+                     scanlf
+                     ,(apps (var scanl) (lam x (lam y (+ (var x) (var y)))) (num ()) ,(list-c 1 2 3)))
+                    q))
+        `(,(list-v 1 3 6))))
