@@ -16,6 +16,30 @@
          make-program
          run-test)
 
+; macro
+(define (symbol-trim-last sym)
+  (let* ([s (symbol->string sym)]
+         [trimmed (substring s 0 (max 0 (sub1 (string-length s))))])
+    (string->symbol trimmed)))
+
+(define-syntax make-program
+  (syntax-rules ()
+    [(_ c) `c]
+    [(_ f c)
+     `(let ,(symbol-trim-last 'f)
+        ,f
+        c)]
+    [(_ f1 f2 ...)
+     `(let ,(symbol-trim-last 'f1)
+        ,f1
+        ,(make-program f2 ...))]))
+
+(define-syntax apps
+  (syntax-rules ()
+    [(_ f) f]
+    [(_ f x) `(app f x)]
+    [(_ f x y ...) (apps (app f x) y ...)]))
+
 ; basic combinator
 (define consf '(lam x (lam y (cons (var x) (var y)))))
 
@@ -72,34 +96,11 @@
      (lam xs (lam ys ,(apps (var foldr) (lam x (lam y (cons (var x) (var y)))) (var ys) (var xs))))))
 
 (define concatf
-  `(let foldl
-     ,foldlf
-     (let append
-       ,appendf
-       (lam xs ,(apps (var foldl) (var append) (list ()) (var xs))))))
+  (make-program foldlf appendf (lam xs ,(apps (var foldl) (var append) (list ()) (var xs)))))
 
-(define (symbol-trim-last sym)
-  (let* ([s (symbol->string sym)]
-         [trimmed (substring s 0 (max 0 (sub1 (string-length s))))])
-    (string->symbol trimmed)))
+(define lengthf
+  '(fix f xs (ifz (= (var xs) (list ())) (num ()) (+ (num (1)) (app (var f) (cdr (var xs)))))))
 
-(define-syntax make-program
-  (syntax-rules ()
-    [(_ c) c]
-    [(_ f c)
-     `(let ,(symbol-trim-last 'f)
-        ,f
-        c)]
-    [(_ f1 f2 ...)
-     `(let ,(symbol-trim-last 'f1)
-        ,f1
-        ,(make-program f2 ...))]))
-
-(define-syntax apps
-  (syntax-rules ()
-    [(_ f) f]
-    [(_ f x) `(app f x)]
-    [(_ f x y ...) (apps (app f x) y ...)]))
 
 (define (run-test)
   (test
@@ -152,4 +153,7 @@
         `(,(list-v 1 2 3 4)))
   (test "concat"
         (run 1 (q) (evalo (make-program concatf ,(apps (var concat) ,(list-c '(1) '(2)))) q))
-        `(,(list-v 1 2))))
+        `(,(list-v 1 2)))
+  (test "length"
+        (run 1 (q) (evalo (make-program lengthf (app (var length) ,(list-c 1 2 3))) q))
+        `(,(build-num 3))))
