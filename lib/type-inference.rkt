@@ -17,7 +17,7 @@
   [(app ,f ,u) (fresh (a) (typedo f env `(fun ,a ,t)) (typedo u env a))]
   [(lam ,x ,u) (fresh (a b) (typedo u `((,x . ,a) . ,env) b) (== t `(fun ,a ,b)))]
   [(fix ,f ,x ,u)
-   (fresh (a b) (typedo u `((,f . (fun ,a ,b)) . (,x . ,a) . ,env) b) (== t `(fun ,a ,b)))]
+   (fresh (a b) (typedo u `((,f . (fun ,a ,b)) . ((,x . ,a) . ,env)) b) (== t `(fun ,a ,b)))]
   [(num ,n) (== t 'int)]
   [(+ ,u ,v) (typedo u env 'int) (typedo v env 'int) (== t 'int)]
   [(- ,u ,v) (typedo u env 'int) (typedo v env 'int) (== t 'int)]
