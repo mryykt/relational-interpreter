@@ -95,8 +95,7 @@
      ,foldrf
      (lam xs (lam ys ,(apps (var foldr) (lam x (lam y (cons (var x) (var y)))) (var ys) (var xs))))))
 
-(define concatf
-  (make-program foldlf appendf (lam xs ,(apps (var foldl) (var append) (list ()) (var xs)))))
+(define concatf (make-program foldlf appendf ,(apps (var foldl) (var append) (list ()))))
 
 (define lengthf
   '(fix f xs (ifz (= (var xs) (list ())) (num ()) (+ (num (1)) (app (var f) (cdr (var xs)))))))
