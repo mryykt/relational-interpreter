@@ -19,9 +19,7 @@
 
 ; macro
 (define (symbol-trim-last sym)
-  (let* ([s (symbol->string sym)]
-         [trimmed (substring s 0 (max 0 (sub1 (string-length s))))])
-    (string->symbol trimmed)))
+  (let ([s (symbol->string sym)]) (string->symbol (substring s 0 (max 0 (sub1 (string-length s)))))))
 
 (define-syntax make-program
   (syntax-rules ()
