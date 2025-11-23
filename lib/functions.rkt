@@ -5,6 +5,7 @@
 (require "interpreter.rkt")
 (require "test-check.rkt")
 (require "helper.rkt")
+(require "type-inference.rkt")
 
 (provide consf
          flipf
@@ -40,8 +41,15 @@
     [(_ f x) `(app f x)]
     [(_ f x y ...) (apps (app f x) y ...)]))
 
-; basic combinator
+; basic function
+(define orf '(lam x (lam y (ifz (var x) (num ()) (= (var y) (num ()))))))
+
+(define andf '(lam x (lam y (ifz (var x) (= (var y) (num ())) (num (1))))))
+
+(define notf '(lam x (ifz (var x) (num (1)) (num ()))))
+
 (define consf '(lam x (lam y (cons (var x) (var y)))))
+; basic combinator
 
 (define flipf '(lam f (lam x (lam y (app (app (var f) (var y)) (var x))))))
 
@@ -100,6 +108,35 @@
 (define lengthf
   '(fix f xs (ifz (= (var xs) (list ())) (num ()) (+ (num (1)) (app (var f) (cdr (var xs)))))))
 
+(define filterf
+  `(fix
+    f
+    g
+    (lam xs
+         (ifz (= (var xs) (list ()))
+              (list ())
+              (let tail ,(apps (var f) (var g) (cdr (var xs)))
+                (ifz (app (var g) (car (var xs))) (cons (car (var xs)) (var tail)) (var tail)))))))
+
+; advanced combinator
+(define mergef
+  (make-program concatf
+                mapf
+                lengthf
+                filterf
+                notf
+                (fix f
+                     g
+                     (lam xs
+                          (ifz (= (var xs) (list ()))
+                               (list ())
+                               (let temp ,(apps (var filter)
+                                                (lam x (app (var not) (= (var x) (list ()))))
+                                                (app [var g] [var xs]))
+                                 (ifz (= (app (var length) (var temp)) (num (1)))
+                                      (car (var temp))
+                                      (app (var concat)
+                                           ,(apps (var map) (app (var f) (var g)) (var temp))))))))))
 
 (define (run-test)
   (test
@@ -155,4 +192,21 @@
         `(,(list-v 1 2)))
   (test "length"
         (run 1 (q) (evalo (make-program lengthf (app (var length) ,(list-c 1 2 3))) q))
-        `(,(build-num 3))))
+        `(,(build-num 3)))
+  (test "filter"
+        (run 1
+             (q)
+             (evalo (make-program
+                     filterf
+                     ,(apps (var filter) (lam x (= (var x) (num ()))) ,(list-c 1 0 0 1 0 1 1 0)))
+                    q))
+        `(,(list-v 0 0 0 0)))
+  (test "merge"
+        (run 1
+             (q)
+             (evalo (make-program mergef
+                                  ,(apps (var merge)
+                                         (lam xs (list ((list ((car (var xs)))) (cdr (var xs)))))
+                                         ,(list-c 1 2 3)))
+                    q))
+        `(,(list-v 1 2 3))))
