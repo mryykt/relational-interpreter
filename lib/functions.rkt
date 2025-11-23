@@ -209,4 +209,23 @@
                                          (lam xs (list ((list ((car (var xs)))) (cdr (var xs)))))
                                          ,(list-c 1 2 3)))
                     q))
-        `(,(list-v 1 2 3))))
+        `(,(list-v 1 2 3)))
+  (test "qsort"
+        (run 1
+             (q)
+             (evalo (make-program
+                     mergef
+                     notf
+                     filterf
+                     ,(apps (var merge)
+                            (lam xs
+                                 (list (,(apps (var filter)
+                                               (lam x (app (var not) (< (car (var xs)) (var x))))
+                                               (cdr (var xs)))
+                                        (list ((car (var xs))))
+                                        ,(apps (var filter)
+                                               (lam x (< (car (var xs)) (var x)))
+                                               (cdr (var xs))))))
+                            ,(list-c 3 1 2 6 7 4 5)))
+                    q))
+        `(,(list-v 1 2 3 4 5 6 7))))

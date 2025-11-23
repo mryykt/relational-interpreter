@@ -23,6 +23,7 @@
   [(- ,u ,v) (typedo u env 'int) (typedo v env 'int) (== t 'int)]
   [(* ,u ,v) (typedo u env 'int) (typedo v env 'int) (== t 'int)]
   [(= ,u ,v) (fresh (a) (typedo u env a) (typedo v env a)) (== t 'int)]
+  [(< ,u ,v) (typedo u env 'int) (typedo v env 'int) (== t 'int)]
   [(list ,ls)
    (fresh (t^)
           (matche

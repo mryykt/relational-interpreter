@@ -5,7 +5,8 @@
 (require minikanren/numbers)
 (require "utils.rkt")
 (require "test-check.rkt")
-(provide evalo evalo^)
+(provide evalo
+         evalo^)
 
 (defrel (evalo^ exp env v)
         (matche exp
@@ -22,6 +23,11 @@
                 [(- ,l ,r) (binary-op l r env minuso v)]
                 [(* ,l ,r) (binary-op l r env *o v)]
                 [(= ,l ,r) (binary-op l r env eqo v)]
+                [(< ,l ,r)
+                 (fresh (lv rv)
+                        (evalo^ l env lv)
+                        (evalo^ r env rv)
+                        (conde [(<o lv rv) (== v '())] [(<=o rv lv) (== v '(1))]))]
                 [(list ,ls)
                  (matche ls [() (== v '())] [(,ca . ,cd) (binary-op ca `(list ,cd) env conso v)])]
                 [(cons ,ca ,cd) (binary-op ca cd env conso v)]
@@ -131,4 +137,6 @@
                                (list ((num ,(build-num 1)) (num ,(build-num 2)))))
                           (list ((num ,(build-num 3)))))
                     q))
-        `((,(build-num 1) ,(build-num 2) ,(build-num 3)))))
+        `((,(build-num 1) ,(build-num 2) ,(build-num 3))))
+  (test "test-<" (run 1 (q) (evalo `(< (num ,(build-num 1)) (num ,(build-num 2))) q)) '(()))
+  (test "test-<" (run 1 (q) (evalo `(< (num ,(build-num 2)) (num ,(build-num 1))) q)) '((1))))
