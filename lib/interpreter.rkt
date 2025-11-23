@@ -5,7 +5,7 @@
 (require minikanren/numbers)
 (require "utils.rkt")
 (require "test-check.rkt")
-(provide evalo)
+(provide evalo evalo^)
 
 (defrel (evalo^ exp env v)
         (matche exp
