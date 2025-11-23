@@ -7,15 +7,7 @@
 (require "helper.rkt")
 (require "type-inference.rkt")
 
-(provide consf
-         flipf
-         composef
-         foldlf
-         foldrf
-         mapf
-         scanlf
-         make-program
-         run-test)
+(provide (all-defined-out))
 
 ; macro
 (define (symbol-trim-last sym)
