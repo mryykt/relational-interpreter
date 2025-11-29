@@ -26,6 +26,40 @@
       'nil
       `((cons ,(car elms)) ,(apply lst (cdr elms)))))
 
+(defrel (typedo exp t)
+        (conde [(fresh (f acc xs et)
+                       (== exp (fn foldl ,f ,acc ,xs))
+                       (typedo f `(fun ,et (fun ,t ,t)))
+                       (typedo acc t)
+                       (typedo xs `(list ,et)))]
+               [(fresh (f init xs et)
+                       (== exp (fn foldr ,f ,init ,xs))
+                       (typedo f `(fun ,et (fun ,t ,t)))
+                       (typedo init t)
+                       (typedo xs `(list ,et)))]
+               [(fresh (f x y a b)
+                       (== exp (fn flip ,f ,x ,y))
+                       (typedo f `(fun ,b (fun ,a ,t)))
+                       (typedo x a)
+                       (typedo y b))]
+               [(fresh (f g x a b)
+                       (== exp (fn compose ,f ,g ,x))
+                       (typedo f `(fun ,t ,b))
+                       (typedo g `(fun ,b ,a))
+                       (typedo x a))]
+               [(fresh (ca cd et)
+                       (== exp (fn cons ,ca ,cd))
+                       (typedo ca et)
+                       (typedo cd `(list ,et))
+                       (== t `(list ,et)))]
+               [(fresh (xs et)
+                       (== exp `(list ,xs))
+                       (== t `(list ,et))
+                       (matche xs
+                               [() (== t `(list ,et))]
+                               [(,ca . ,cd) (typedo ca et) (typedo `(list ,cd) `(list ,et))]))]
+               [(numbero exp) (== t 'int)]))
+
 (defrel
  (evalo exp val)
  (conde [(fresh (f acc acc^ xs xs^ acc2)
@@ -58,8 +92,7 @@
                 (evalo cd cd^)
                 (matche cd^ [(list ,xs) (== val `(list (,ca^ . ,xs)))]))]
         [(caro 'list exp) (== val exp)]
-        [(numbero exp) (== val exp)]
-        [(symbolo exp) (== val exp)]))
+        [(numbero exp) (== val exp)]))
 
 (define-syntax fn
   (syntax-rules ()
@@ -69,10 +102,12 @@
 
 (define (run-test)
   (begin
+    (printf "function test\n")
     (test "foldl" (run* (q) (evalo (fn foldl cons (list ()) (list (1 2 3))) q)) '((list (3 2 1))))
     (test "foldr" (run* (q) (evalo (fn foldr cons (list ()) (list (1 2 3))) q)) '((list (1 2 3))))
     (test "flip" (run* (q) (evalo (fn flip cons (list ()) 1) q)) '((list (1))))
-    ; synthesis test
+    (test "compose" (run* (q) (evalo (fn compose (cons 1) (cons 2) (list (3))) q)) '((list (1 2 3))))
+    (printf "synthesis test\n")
     (test "reverse"
           (run 1 (q) (evalo `(,q (list (1 2 3))) '(list (3 2 1))))
           `(,(fn foldl cons (list ()))))
@@ -81,4 +116,11 @@
           `(,(fn flip (foldr cons))))
     (test "concat"
           (run 1 (q) (evalo `(,q (list ((list (1 2)) (list (3 4))))) '(list (1 2 3 4))))
-          '(((foldl (foldr cons)) (list ()))))))
+          '(((foldl (foldr cons)) (list ()))))
+    (test "map"
+          (run 1
+               (q)
+               (evalo `((((compose ((flip foldr) (list ()))) (compose cons)) ((flip cons) (list ())))
+                        (list (1 2 3)))
+                      q))
+          '())))
