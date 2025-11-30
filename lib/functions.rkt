@@ -41,15 +41,18 @@
     [(_ f x) `(app f x)]
     [(_ f x y ...) (apps (app f x) y ...)]))
 
+(define (with-functions ls c)
+  (if (eq? ls '())
+      c
+      `(let ,(caar ls)
+         ,(cdar ls)
+         ,(with-functions (cdr ls) c))))
+
 (define (with-all-functions c)
-  (letrec ([helper (lambda (ls)
-                     (if (eq? ls '())
-                         c
-                         `(let ,(caar ls)
-                            ,(cdar ls)
-                            ,(helper (cdr ls)))))])
-    (helper
-     `((foldl . ,foldlf) (flip . ,flipf) (cons . ,consf) (concat . ,concatf) (append . ,appendf)))))
+
+  (with-functions
+   `((foldl . ,foldlf) (flip . ,flipf) (cons . ,consf) (concat . ,concatf) (append . ,appendf))
+   c))
 
 ; basic function
 (defun orf
