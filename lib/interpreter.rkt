@@ -19,6 +19,8 @@
                 [(lam ,x ,t) (== v `((0 ,x ,t) . ,env))]
                 [(fix ,f ,x ,t) (evalo^ `(var ,f) `((,f . ((,f ,x ,t) . ,env)) . ,env) v)]
                 [(num ,n) (== v n)]
+                [true (== v 'true)]
+                [false (== v 'false)]
                 [(+ ,l ,r) (binary-op l r env pluso v)]
                 [(- ,l ,r) (binary-op l r env minuso v)]
                 [(* ,l ,r) (binary-op l r env *o v)]
@@ -27,22 +29,22 @@
                  (fresh (lv rv)
                         (evalo^ l env lv)
                         (evalo^ r env rv)
-                        (conde [(<o lv rv) (== v '())] [(<=o rv lv) (== v '(1))]))]
+                        (conde [(<o lv rv) (== v 'true)] [(<=o rv lv) (== v 'false)]))]
                 [(list ,ls)
                  (matche ls [() (== v '())] [(,ca . ,cd) (binary-op ca `(list ,cd) env conso v)])]
                 [(cons ,ca ,cd) (binary-op ca cd env conso v)]
                 [(car ,ls) (fresh (lsv) (evalo^ ls env lsv) (caro v lsv))]
                 [(cdr ,ls) (fresh (lsv) (evalo^ ls env lsv) (cdro v lsv))]
-                [(ifz ,t ,e1 ,e2)
+                [(if ,t ,e1 ,e2)
                  (fresh (tv)
                         (evalo^ t env tv)
-                        (conde [(== tv '()) (evalo^ e1 env v)] [(=/= tv '()) (evalo^ e2 env v)]))]
+                        (conde [(== tv 'true) (evalo^ e1 env v)] [(== tv 'false) (evalo^ e2 env v)]))]
                 [(let ,x
                    ,t
                    ,e)
                  (fresh (tv ce env^ tl) (evalo^ t env tv) (evalo^ e `((,x . ,tv) . ,env) v))]))
 
-(defrel (eqo l r v) (conde [(== l r) (== v '())] [(=/= l r) (== v '(1))]))
+(defrel (eqo l r v) (conde [(== l r) (== v 'true)] [(=/= l r) (== v 'false)]))
 
 (define-syntax binary-op
   (syntax-rules ()
@@ -57,11 +59,21 @@
              (q)
              (evalo `(app (app (lam x (lam y (var y))) (num ,(build-num 1))) (num ,(build-num 2))) q))
         `(,(build-num 2)))
-  (test "test-ifz-1"
-        (run 1 (q) (evalo `(ifz (num ,(build-num 0)) (num ,(build-num 1)) (num ,(build-num 2))) q))
+  (test "test-if-1"
+        (run 1
+             (q)
+             (evalo `(if true
+                         (num ,(build-num 1))
+                         (num ,(build-num 2)))
+                    q))
         `(,(build-num 1)))
-  (test "test-ifz-2"
-        (run 1 (q) (evalo `(ifz (num ,(build-num 1)) (num ,(build-num 1)) (num ,(build-num 2))) q))
+  (test "test-if-2"
+        (run 1
+             (q)
+             (evalo `(if false
+                         (num ,(build-num 1))
+                         (num ,(build-num 2)))
+                    q))
         `(,(build-num 2)))
   (test "test-arithmetic"
         (run 1
@@ -75,9 +87,9 @@
              (q)
              (evalo `(app (fix f
                                n
-                               (ifz (var n)
-                                    (num ,(build-num 1))
-                                    (* (var n) (app (var f) (- (var n) (num ,(build-num 1)))))))
+                               (if (= (var n) (num ()))
+                                   (num ,(build-num 1))
+                                   (* (var n) (app (var f) (- (var n) (num ,(build-num 1)))))))
                           (num ,(build-num 4)))
                     q))
         `(,(build-num 24)))
@@ -98,8 +110,8 @@
                        (app (var f) (num ,(build-num 1))))
                     q))
         `(,(build-num 1)))
-  (test "test-eq-1" (run 1 (q) (evalo `(= (num ,(build-num 10)) (num ,(build-num 11))) q)) '((1)))
-  (test "test-eq-2" (run 1 (q) (evalo `(= (num ,(build-num 10)) (num ,(build-num 10))) q)) '(()))
+  (test "test-eq-1" (run 1 (q) (evalo `(= (num ,(build-num 10)) (num ,(build-num 11))) q)) '(false))
+  (test "test-eq-2" (run 1 (q) (evalo `(= (num ,(build-num 10)) (num ,(build-num 10))) q)) '(true))
   (test "test-list"
         (run 1 (q) (evalo `(list ((num ,(build-num 1)) (num ,(build-num 2)) (num ,(build-num 3)))) q))
         `((,(build-num 1) ,(build-num 2) ,(build-num 3))))
@@ -118,9 +130,9 @@
              (q)
              (evalo `(app (fix f
                                x
-                               (ifz (= (var x) (list ()))
-                                    (num ,(build-num 0))
-                                    (+ (num ,(build-num 1)) (app (var f) (cdr (var x))))))
+                               (if (= (var x) (list ()))
+                                   (num ,(build-num 0))
+                                   (+ (num ,(build-num 1)) (app (var f) (cdr (var x))))))
                           (list ((num ,(build-num 1)) (num ,(build-num 2)) (num ,(build-num 3)))))
                     q))
         `(,(build-num 3)))
@@ -130,13 +142,13 @@
              (evalo `(app (app (fix f
                                     x
                                     (lam y
-                                         (ifz (= (var x) (list ()))
-                                              (var y)
-                                              (cons (car (var x))
-                                                    (app (app (var f) (cdr (var x))) (var y))))))
+                                         (if (= (var x) (list ()))
+                                             (var y)
+                                             (cons (car (var x))
+                                                   (app (app (var f) (cdr (var x))) (var y))))))
                                (list ((num ,(build-num 1)) (num ,(build-num 2)))))
                           (list ((num ,(build-num 3)))))
                     q))
         `((,(build-num 1) ,(build-num 2) ,(build-num 3))))
-  (test "test-<" (run 1 (q) (evalo `(< (num ,(build-num 1)) (num ,(build-num 2))) q)) '(()))
-  (test "test-<" (run 1 (q) (evalo `(< (num ,(build-num 2)) (num ,(build-num 1))) q)) '((1))))
+  (test "test- <" (run 1 (q) (evalo `(< (num ,(build-num 1)) (num ,(build-num 2))) q)) '(true))
+  (test "test- <" (run 1 (q) (evalo `(< (num ,(build-num 2)) (num ,(build-num 1))) q)) '(false)))

@@ -52,11 +52,21 @@
      `((foldl . ,foldlf) (flip . ,flipf) (cons . ,consf) (concat . ,concatf) (append . ,appendf)))))
 
 ; basic function
-(defun orf '(lam x (lam y (ifz (var x) (num ()) (= (var y) (num ()))))))
+(defun orf
+       '(lam x
+             (lam y
+                  (if (var x)
+                      false
+                      (= (var y) true)))))
 
-(defun andf '(lam x (lam y (ifz (var x) (= (var y) (num ())) (num (1))))))
+(defun andf
+       '(lam x
+             (lam y
+                  (if (var x)
+                      (= (var y) true)
+                      false))))
 
-(defun notf '(lam x (ifz (var x) (num (1)) (num ()))))
+(defun notf '(lam x (if (var x) false true)))
 
 (defun consf '(lam x (lam y (cons (var x) (var y)))))
 ; basic combinator
@@ -70,45 +80,45 @@
              g
              (lam acc
                   (lam xs
-                       (ifz (= (var xs) (list ()))
-                            (var acc)
-                            (app (app (app (var f) (var g))
-                                      (app (app (var g) (var acc)) (car (var xs))))
-                                 (cdr (var xs))))))))
+                       (if (= (var xs) (list ()))
+                           (var acc)
+                           (app (app (app (var f) (var g))
+                                     (app (app (var g) (var acc)) (car (var xs))))
+                                (cdr (var xs))))))))
 
 (defun foldrf
        '(fix f
              g
              (lam init
                   (lam xs
-                       (ifz (= (var xs) (list ()))
-                            (var init)
-                            (app (app (var g) (car (var xs)))
-                                 (app (app (app (var f) (var g)) (var init)) (cdr (var xs)))))))))
+                       (if (= (var xs) (list ()))
+                           (var init)
+                           (app (app (var g) (car (var xs)))
+                                (app (app (app (var f) (var g)) (var init)) (cdr (var xs)))))))))
 
 (defun mapf
        '(fix f
              g
              (lam xs
-                  (ifz (= (var xs) (list ()))
-                       (list ())
-                       (cons (app (var g) (car (var xs)))
-                             (app (app (var f) (var g)) (cdr (var xs))))))))
+                  (if (= (var xs) (list ()))
+                      (list ())
+                      (cons (app (var g) (car (var xs)))
+                            (app (app (var f) (var g)) (cdr (var xs))))))))
 
 (defun scanlf
        '(fix f
              g
              (lam acc
                   (lam xs
-                       (ifz (= (var xs) (list ()))
-                            (list ())
-                            (let acc2 (app
-                                       [app
-                                        (var g)
-                                        (car (var xs))]
-                                       [var acc])
-                              (cons (var acc2)
-                                    (app (app (app (var f) (var g)) (var acc2)) (cdr (var xs))))))))))
+                       (if (= (var xs) (list ()))
+                           (list ())
+                           (let acc2 (app
+                                      [app
+                                       (var g)
+                                       (car (var xs))]
+                                      [var acc])
+                             (cons (var acc2)
+                                   (app (app (app (var f) (var g)) (var acc2)) (cdr (var xs))))))))))
 
 (defun
  appendf
@@ -119,17 +129,22 @@
 (defun concatf (make-program foldlf appendf ,(apps (var foldl) (var append) (list ()))))
 
 (defun lengthf
-       '(fix f xs (ifz (= (var xs) (list ())) (num ()) (+ (num (1)) (app (var f) (cdr (var xs)))))))
+       '(fix f
+             xs
+             (if (= (var xs) (list ()))
+                 (num ())
+                 (+ (num (1)) (app (var f) (cdr (var xs)))))))
 
-(defun
- filterf
- `(fix f
-       g
-       (lam xs
-            (ifz (= (var xs) (list ()))
-                 (list ())
-                 (let tail ,(apps (var f) (var g) (cdr (var xs)))
-                   (ifz (app (var g) (car (var xs))) (cons (car (var xs)) (var tail)) (var tail)))))))
+(defun filterf
+       `(fix f
+             g
+             (lam xs
+                  (if (= (var xs) (list ()))
+                      (list ())
+                      (let tail ,(apps (var f) (var g) (cdr (var xs)))
+                        (if (app (var g) (car (var xs)))
+                            (cons (car (var xs)) (var tail))
+                            (var tail)))))))
 
 ; advanced combinator
 (defun mergef
@@ -142,15 +157,15 @@
         (fix f
              g
              (lam xs
-                  (ifz (= (var xs) (list ()))
-                       (list ())
-                       (let temp ,(apps (var filter)
-                                        (lam x (app (var not) (= (var x) (list ()))))
-                                        (app [var g] [var xs]))
-                         (ifz (= (app (var length) (var temp)) (num (1)))
-                              (car (var temp))
-                              (app (var concat)
-                                   ,(apps (var map) (app (var f) (var g)) (var temp))))))))))
+                  (if (= (var xs) (list ()))
+                      (list ())
+                      (let temp ,(apps (var filter)
+                                       (lam x (app (var not) (= (var x) (list ()))))
+                                       (app [var g] [var xs]))
+                        (if (= (app (var length) (var temp)) (num (1)))
+                            (car (var temp))
+                            (app (var concat)
+                                 ,(apps (var map) (app (var f) (var g)) (var temp))))))))))
 
 (define (run-test)
   (test

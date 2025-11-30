@@ -19,11 +19,13 @@
   [(fix ,f ,x ,u)
    (fresh (a b) (typedo u `((,f . (fun ,a ,b)) . ((,x . ,a) . ,env)) b) (== t `(fun ,a ,b)))]
   [(num ,n) (== t 'int)]
+  [true (== t 'bool)]
+  [false (== t 'bool)]
   [(+ ,u ,v) (typedo u env 'int) (typedo v env 'int) (== t 'int)]
   [(- ,u ,v) (typedo u env 'int) (typedo v env 'int) (== t 'int)]
   [(* ,u ,v) (typedo u env 'int) (typedo v env 'int) (== t 'int)]
-  [(= ,u ,v) (fresh (a) (typedo u env a) (typedo v env a)) (== t 'int)]
-  [(< ,u ,v) (typedo u env 'int) (typedo v env 'int) (== t 'int)]
+  [(= ,u ,v) (fresh (a) (typedo u env a) (typedo v env a)) (== t 'bool)]
+  [(< ,u ,v) (typedo u env 'int) (typedo v env 'int) (== t 'bool)]
   [(list ,ls)
    (fresh (t^)
           (matche
@@ -33,7 +35,7 @@
   [(cons ,ca ,cd) (fresh (t^) (typedo ca env t^) (typedo cd env `(list ,t^)) (== t `(list ,t^)))]
   [(car ,ls) (typedo ls env `(list ,t))]
   [(cdr ,ls) (typedo ls env t) (caro 'list t)]
-  [(ifz ,e ,u ,v) (typedo e env 'int) (typedo u env t) (typedo v env t)]
+  [(if ,e ,u ,v) (typedo e env 'bool) (typedo u env t) (typedo v env t)]
   [(let ,x
      ,e1
      ,e2)
@@ -49,9 +51,9 @@
              (q)
              (typedo `(app (fix f
                                 n
-                                (ifz (var n)
-                                     (num ,(build-num 1))
-                                     (* (var n) (app (var f) (- (var n) (num ,(build-num 1)))))))
+                                (if (= (var n) (num ()))
+                                    (num ,(build-num 1))
+                                    (* (var n) (app (var f) (- (var n) (num ,(build-num 1)))))))
                            (num ,(build-num 4)))
                      '()
                      q))
