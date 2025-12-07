@@ -10,14 +10,18 @@
 (require "test-check.rkt")
 (require "utils.rkt")
 
-(defrel
- (translateo src dst env t)
- (matche
-  src
-  [(,u ,v)
-   (fresh (a b t0) (translateo u a env `(fun ,t0 ,t)) (translateo v b env t0) (== dst `(app ,a ,b)))]
-  [,u (symbolo u) (lookupo u env t) (== dst `(var ,u))]
-  [() (fresh (et) (== t `(list ,et)) (== dst '(list ())))]))
+(provide synthesis
+         run-test)
+
+(defrel (translateo src dst env env^ t)
+        (matche src
+                [(,u ,v)
+                 (fresh (a b t0 env^^)
+                        (translateo u a env env^^ `(fun ,t0 ,t))
+                        (translateo v b env^^ env^ t0)
+                        (== dst `(app ,a ,b)))]
+                [,u (symbolo u) (lookupo u env t) (== dst `(var ,u)) (rembero u env env^)]
+                [() (fresh (et) (== t `(list ,et)) (== dst '(list ())) (== env env^))]))
 
 (defrel (typed-helpero ne nt)
         (matche ne [(,name . ,body) (fresh (t) (typedo body '() t) (== nt `(,name . ,t)))]))
@@ -32,17 +36,17 @@
     [(_ n (q) t (input ...) output)
      (run n
           (q)
-          (fresh (env tenv dst)
+          (fresh (env tenv dst res)
                  (mapo typed-helpero all-functions-list tenv)
-                 (translateo q dst tenv t)
+                 (translateo q dst tenv res t)
                  (evalo (with-all-functions (combinator-helper ,dst (input ...))) output)))]
     [(_ n (q) t (function ...) (input ...) output)
      (let ([env `((,(symbol-trim-last 'function) . ,function) ...)])
        (run n
             (q)
-            (fresh (tenv dst)
+            (fresh (tenv dst res)
                    (mapo typed-helpero env tenv)
-                   (translateo q dst tenv t)
+                   (translateo q dst tenv res t)
                    (evalo (with-functions env (combinator-helper ,dst (input ...))) output))))]))
 
 (define (run-test)

@@ -7,6 +7,7 @@
          caro
          cdro
          membero
+         rembero
          appendo
          lookupo
          mapo
@@ -25,6 +26,14 @@
 
 (define (membero x xs)
   (fresh (ca cd) (conso ca cd xs) (conde ((== x ca)) ((membero x cd)))))
+
+(defrel (rembero x l out)
+        (matche l
+                [() (== out '())]
+                [(,h . ,t)
+                 (fresh (res)
+                        (rembero x t res)
+                        (conde [(== x h) (== out res)] [(=/= x h) (== out `(,h . ,res))]))]))
 
 (define (appendo l s out)
   (conde ((== l '()) (== s out))
