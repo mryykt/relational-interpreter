@@ -72,6 +72,8 @@
 (defun notf '(lam x (if (var x) false true)))
 
 (defun consf '(lam x (lam y (cons (var x) (var y)))))
+
+(defun ltf '(lam x (lam y (< (var x) (var y)))))
 ; basic combinator
 
 (defun flipf '(lam f (lam x (lam y (app (app (var f) (var y)) (var x))))))
@@ -170,6 +172,34 @@
                             (app (var concat)
                                  ,(apps (var map) (app (var f) (var g)) (var temp))))))))))
 
+(defun fromHeadf
+       `(fix f
+             g
+             (lam xs
+                  (if (= (var xs) (list ()))
+                      (list ())
+                      ,(apps (var g) (car (var xs)) ,(apps (var f) (var g) (cdr (var xs))))))))
+
+(defun
+ noEmptyf
+ `(fix f
+       g
+       (lam x
+            (lam xs
+                 (if (= (var xs) (list ()))
+                     (list ((var x)))
+                     ,(apps (var g) (app (var f) (var g)) (var x) (car (var xs)) (cdr (var xs))))))))
+
+(defun sortHelperf
+       `(lam g
+             (lam h
+                  (lam x
+                       (lam y
+                            (lam ys
+                                 (if ,(apps (var g) (var x) (var y))
+                                     (cons (var x) (cons (var y) (var ys)))
+                                     (cons (var y) ,(apps (var h) (var x) (var ys))))))))))
+
 (define (run-test)
   (test
    "cons"
@@ -259,5 +289,25 @@
                                                (lam x (< (car (var xs)) (var x)))
                                                (cdr (var xs))))))
                             ,(list-c 3 1 2 6 7 4 5)))
+                    q))
+        `(,(list-v 1 2 3 4 5 6 7)))
+  (test "fromHead"
+        (run 1
+             (q)
+             (evalo (make-program
+                     fromHeadf
+                     ,(apps (var fromHead) (lam x (lam y (cons (var x) (var y)))) ,(list-c 1 2)))
+                    q))
+        `(,(list-v 1 2)))
+  (test "insert_sort"
+        (run 1
+             (q)
+             (evalo (make-program fromHeadf
+                                  noEmptyf
+                                  sortHelperf
+                                  ltf
+                                  ,(apps (var fromHead)
+                                         (app (var noEmpty) (app (var x) (var lt)))
+                                         ,(list-c 3 1 2 6 7 4 5)))
                     q))
         `(,(list-v 1 2 3 4 5 6 7))))

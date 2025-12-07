@@ -70,4 +70,12 @@
         [0f '(lam x (num ()))])
     (test "sum"
           (synthesis 1 (q) '(fun (list int) int) (foldlf +f 0f) (,(list-c 1 2 3)) (build-num 6))
-          '(((foldl +) (|0| ()))))))
+          '(((foldl +) (|0| ())))))
+  (test "isort"
+        (synthesis 1
+                   (q)
+                   '(fun (list int) (list int))
+                   (noEmptyf sortHelperf ltf fromHeadf)
+                   (,(list-c 3 1 2))
+                   (list-v 1 2 3))
+        '((fromHead (noEmpty (sortHelper lt))))))
