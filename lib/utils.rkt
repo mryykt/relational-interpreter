@@ -43,9 +43,9 @@
         (conde ((fresh (y v rest) (== `((,y . ,v) . ,rest) env) (== y x) (== v t)))
                ((fresh (y v rest) (== `((,y . ,v) . ,rest) env) (=/= y x) (lookupo x rest t)))))
 
-(defrel
- (mapo p xs ys)
- (matche xs [() (== ys '())] [(,h . ,l) (fresh (h^ l^) (p h h^) (mapo p l l^) (== ys `(,h^ . ,l^)))]))
+(defrel (mapo p xs ys)
+        (conde [(== xs '()) (== ys '())]
+               [(fresh (h l h^ l^) (== xs `(,h . ,l)) (== ys `(,h^ . ,l^)) (p h h^) (mapo p l l^))]))
 
 (defrel (inco n m) (pluso n (build-num 1) m))
 
