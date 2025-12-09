@@ -1,8 +1,12 @@
 #lang racket
+(require minikanren)
+(require minikanren/matche)
 (require minikanren/numbers)
 (require "test-check.rkt")
+(require "type-inference.rkt")
 (provide list-c
-         list-v)
+         list-v
+         typed-helpero)
 
 (define (list-c . xs)
   (define (helper ys)
@@ -21,6 +25,9 @@
           [(number? (car ys)) (cons (build-num (car ys)) (helper (cdr ys)))]
           [(list? (car ys)) (cons (helper (car ys)) (helper (cdr ys)))])))
   (helper xs))
+
+(defrel (typed-helpero ne nt)
+        (matche ne [(,name . ,body) (fresh (t) (typedo body '() t) (== nt `(,name . ,t)))]))
 
 (define (run-test)
   (test "list-c-1"

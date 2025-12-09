@@ -16,29 +16,20 @@
                 [,u (symbolo u) (== dst `(var ,u))]
                 [() (== dst '(list ()))]))
 
-(defrel (typed-helpero ne nt)
-        (matche ne [(,name . ,body) (fresh (t) (typedo body '() t) (== nt `(,name . ,t)))]))
-
-(define-syntax combinator-helper
-  (syntax-rules ()
-    [(_ program (input)) `(app program input)]
-    [(_ program (input1 input2 ...)) (combinator-helper (app program input1) (input2 ...))]))
-
 (define-syntax synthesis
   (syntax-rules ()
     [(_ n (q) (input ...) output)
-     (run n
-          (q)
-          (fresh (env dst)
-                 (translateo q dst)
-                 (evalo (with-all-functions (combinator-helper ,dst (input ...))) output)))]
+     (run
+      n
+      (q)
+      (fresh (env dst) (translateo q dst) (evalo (with-all-functions (apps ,dst input ...)) output)))]
     [(_ n (q) (function ...) (input ...) output)
      (let ([env `((,(symbol-trim-last 'function) . ,function) ...)])
        (run n
             (q)
             (fresh (dst)
                    (translateo q dst)
-                   (evalo (with-functions env (combinator-helper ,dst (input ...))) output))))]))
+                   (evalo (with-functions env (apps ,dst input ...)) output))))]))
 
 (define (run-test)
   (test "reverse"

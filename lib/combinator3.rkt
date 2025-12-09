@@ -23,14 +23,6 @@
                 [,u (symbolo u) (lookupo u env t) (== dst `(var ,u)) (rembero u env env^)]
                 [() (fresh (et) (== t `(list ,et)) (== dst '(list ())) (== env env^))]))
 
-(defrel (typed-helpero ne nt)
-        (matche ne [(,name . ,body) (fresh (t) (typedo body '() t) (== nt `(,name . ,t)))]))
-
-(define-syntax combinator-helper
-  (syntax-rules ()
-    [(_ program (input)) `(app program input)]
-    [(_ program (input1 input2 ...)) (combinator-helper (app program input1) (input2 ...))]))
-
 (define-syntax synthesis
   (syntax-rules ()
     [(_ n (q) t (input ...) output)
@@ -39,7 +31,7 @@
           (fresh (env tenv dst res)
                  (mapo typed-helpero all-functions-list tenv)
                  (translateo q dst tenv res t)
-                 (evalo (with-all-functions (combinator-helper ,dst (input ...))) output)))]
+                 (evalo (with-all-functions (apps ,dst input ...)) output)))]
     [(_ n (q) t (function ...) (input ...) output)
      (let ([env `((,(symbol-trim-last 'function) . ,function) ...)])
        (run n
@@ -47,7 +39,7 @@
             (fresh (tenv dst res)
                    (mapo typed-helpero env tenv)
                    (translateo q dst tenv res t)
-                   (evalo (with-functions env (combinator-helper ,dst (input ...))) output))))]))
+                   (evalo (with-functions env (apps ,dst input ...)) output))))]))
 
 (define (run-test)
   (test
