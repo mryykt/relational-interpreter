@@ -80,20 +80,20 @@
                           (lam y
                                (if (var x)
                                    false
-                                   (= (var y) true)))))
+                                   ((var y) = true)))))
 
 (def-basic-function andf
                     '(lam x
                           (lam y
                                (if (var x)
-                                   (= (var y) true)
+                                   ((var y) = true)
                                    false))))
 
 (def-basic-function notf '(lam x (if (var x) false true)))
 
 (def-basic-function consf '(lam x (lam y (cons (var x) (var y)))))
 
-(def-basic-function ltf '(lam x (lam y (< (var x) (var y)))))
+(def-basic-function ltf '(lam x (lam y ((var x) < (var y)))))
 ; basic combinator
 
 (def-basic-function flipf '(lam f (lam x (lam y (app (app (var f) (var y)) (var x))))))
@@ -106,7 +106,7 @@
                          g
                          (lam acc
                               (lam xs
-                                   (if (= (var xs) (list ()))
+                                   (if ((var xs) = (list ()))
                                        (var acc)
                                        (app (app (app (var f) (var g))
                                                  (app (app (var g) (var acc)) (car (var xs))))
@@ -117,7 +117,7 @@
                          g
                          (lam init
                               (lam xs
-                                   (if (= (var xs) (list ()))
+                                   (if ((var xs) = (list ()))
                                        (var init)
                                        (app (app (var g) (car (var xs)))
                                             (app (app (app (var f) (var g)) (var init))
@@ -127,7 +127,7 @@
                    '(fix f
                          g
                          (lam xs
-                              (if (= (var xs) (list ()))
+                              (if ((var xs) = (list ()))
                                   (list ())
                                   (cons (app (var g) (car (var xs)))
                                         (app (app (var f) (var g)) (cdr (var xs))))))))
@@ -137,7 +137,7 @@
                          g
                          (lam acc
                               (lam xs
-                                   (if (= (var xs) (list ()))
+                                   (if ((var xs) = (list ()))
                                        (list ())
                                        (let acc2 (app
                                                   [app
@@ -159,15 +159,15 @@
 (def-list-function lengthf
                    '(fix f
                          xs
-                         (if (= (var xs) (list ()))
+                         (if ((var xs) = (list ()))
                              (num ())
-                             (+ (num (1)) (app (var f) (cdr (var xs)))))))
+                             ((num (1)) + (app (var f) (cdr (var xs)))))))
 
 (def-list-function filterf
                    `(fix f
                          g
                          (lam xs
-                              (if (= (var xs) (list ()))
+                              (if ((var xs) = (list ()))
                                   (list ())
                                   (let tail ,(apps (var f) (var g) (cdr (var xs)))
                                     (if (app (var g) (car (var xs)))
@@ -185,12 +185,12 @@
                (fix f
                     g
                     (lam xs
-                         (if (= (var xs) (list ()))
+                         (if ((var xs) = (list ()))
                              (list ())
                              (let temp ,(apps (var filter)
-                                              (lam x (app (var not) (= (var x) (list ()))))
+                                              (lam x (app (var not) ((var x) = (list ()))))
                                               (app [var g] [var xs]))
-                               (if (= (app (var length) (var temp)) (num (1)))
+                               (if ((app (var length) (var temp)) = (num (1)))
                                    (car (var temp))
                                    (app (var concat)
                                         ,(apps (var map) (app (var f) (var g)) (var temp))))))))))
@@ -200,7 +200,7 @@
  `(fix f
        g
        (lam xs
-            (if (= (var xs) (list ()))
+            (if ((var xs) = (list ()))
                 (list ())
                 ,(apps (var g) (car (var xs)) ,(apps (var f) (var g) (cdr (var xs))))))))
 
@@ -210,7 +210,7 @@
        g
        (lam x
             (lam xs
-                 (if (= (var xs) (list ()))
+                 (if ((var xs) = (list ()))
                      (list ((var x)))
                      ,(apps (var g) (app (var f) (var g)) (var x) (car (var xs)) (cdr (var xs))))))))
 
@@ -268,7 +268,7 @@
              (q)
              (evalo (make-program
                      scanlf
-                     ,(apps (var scanl) (lam x (lam y (+ (var x) (var y)))) (num ()) ,(list-c 1 2 3)))
+                     ,(apps (var scanl) (lam x (lam y ((var x) + (var y)))) (num ()) ,(list-c 1 2 3)))
                     q))
         `(,(list-v 1 3 6)))
   (test "append"
@@ -285,7 +285,7 @@
              (q)
              (evalo (make-program
                      filterf
-                     ,(apps (var filter) (lam x (= (var x) (num ()))) ,(list-c 1 0 0 1 0 1 1 0)))
+                     ,(apps (var filter) (lam x ((var x) = (num ()))) ,(list-c 1 0 0 1 0 1 1 0)))
                     q))
         `(,(list-v 0 0 0 0)))
   (test "merge"
@@ -307,11 +307,11 @@
                      ,(apps (var merge)
                             (lam xs
                                  (list (,(apps (var filter)
-                                               (lam x (app (var not) (< (car (var xs)) (var x))))
+                                               (lam x (app (var not) ((car (var xs)) < (var x))))
                                                (cdr (var xs)))
                                         (list ((car (var xs))))
                                         ,(apps (var filter)
-                                               (lam x (< (car (var xs)) (var x)))
+                                               (lam x ((car (var xs)) < (var x)))
                                                (cdr (var xs))))))
                             ,(list-c 3 1 2 6 7 4 5)))
                     q))
@@ -332,7 +332,7 @@
                                   sortHelperf
                                   ltf
                                   ,(apps (var fromHead)
-                                         (app (var noEmpty) (app (var x) (var lt)))
+                                         (app (var noEmpty) (app (var sortHelper) (var lt)))
                                          ,(list-c 3 1 2 6 7 4 5)))
                     q))
         `(,(list-v 1 2 3 4 5 6 7))))

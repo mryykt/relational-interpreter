@@ -21,11 +21,11 @@
                 [(num ,n) (== v n)]
                 [true (== v 'true)]
                 [false (== v 'false)]
-                [(+ ,l ,r) (binary-op l r env pluso v)]
-                [(- ,l ,r) (binary-op l r env minuso v)]
-                [(* ,l ,r) (binary-op l r env *o v)]
-                [(= ,l ,r) (binary-op l r env eqo v)]
-                [(< ,l ,r)
+                [(,l + ,r) (binary-op l r env pluso v)]
+                [(,l - ,r) (binary-op l r env minuso v)]
+                [(,l * ,r) (binary-op l r env *o v)]
+                [(,l = ,r) (binary-op l r env eqo v)]
+                [(,l < ,r)
                  (fresh (lv rv)
                         (evalo^ l env lv)
                         (evalo^ r env rv)
@@ -78,8 +78,9 @@
   (test "test-arithmetic"
         (run 1
              (q)
-             (evalo `(+ (num ,(build-num 2))
-                        (- (num ,(build-num 10)) (* (num ,(build-num 3)) (num ,(build-num 3)))))
+             (evalo `((num ,(build-num 2))
+                      +
+                      ((num ,(build-num 10)) - ((num ,(build-num 3)) * (num ,(build-num 3)))))
                     q))
         `(,(build-num 3)))
   (test "test-fix"
@@ -87,9 +88,9 @@
              (q)
              (evalo `(app (fix f
                                n
-                               (if (= (var n) (num ()))
+                               (if ((var n) = (num ()))
                                    (num ,(build-num 1))
-                                   (* (var n) (app (var f) (- (var n) (num ,(build-num 1)))))))
+                                   ((var n) * (app (var f) ((var n) - (num ,(build-num 1)))))))
                           (num ,(build-num 4)))
                     q))
         `(,(build-num 24)))
@@ -110,8 +111,8 @@
                        (app (var f) (num ,(build-num 1))))
                     q))
         `(,(build-num 1)))
-  (test "test-eq-1" (run 1 (q) (evalo `(= (num ,(build-num 10)) (num ,(build-num 11))) q)) '(false))
-  (test "test-eq-2" (run 1 (q) (evalo `(= (num ,(build-num 10)) (num ,(build-num 10))) q)) '(true))
+  (test "test-eq-1" (run 1 (q) (evalo `((num ,(build-num 10)) = (num ,(build-num 11))) q)) '(false))
+  (test "test-eq-2" (run 1 (q) (evalo `((num ,(build-num 10)) = (num ,(build-num 10))) q)) '(true))
   (test "test-list"
         (run 1 (q) (evalo `(list ((num ,(build-num 1)) (num ,(build-num 2)) (num ,(build-num 3)))) q))
         `((,(build-num 1) ,(build-num 2) ,(build-num 3))))
@@ -130,9 +131,9 @@
              (q)
              (evalo `(app (fix f
                                x
-                               (if (= (var x) (list ()))
+                               (if ((var x) = (list ()))
                                    (num ,(build-num 0))
-                                   (+ (num ,(build-num 1)) (app (var f) (cdr (var x))))))
+                                   ((num ,(build-num 1)) + (app (var f) (cdr (var x))))))
                           (list ((num ,(build-num 1)) (num ,(build-num 2)) (num ,(build-num 3)))))
                     q))
         `(,(build-num 3)))
@@ -142,7 +143,7 @@
              (evalo `(app (app (fix f
                                     x
                                     (lam y
-                                         (if (= (var x) (list ()))
+                                         (if ((var x) = (list ()))
                                              (var y)
                                              (cons (car (var x))
                                                    (app (app (var f) (cdr (var x))) (var y))))))
@@ -150,5 +151,5 @@
                           (list ((num ,(build-num 3)))))
                     q))
         `((,(build-num 1) ,(build-num 2) ,(build-num 3))))
-  (test "test- <" (run 1 (q) (evalo `(< (num ,(build-num 1)) (num ,(build-num 2))) q)) '(true))
-  (test "test- <" (run 1 (q) (evalo `(< (num ,(build-num 2)) (num ,(build-num 1))) q)) '(false)))
+  (test "test- <" (run 1 (q) (evalo `((num ,(build-num 1)) < (num ,(build-num 2))) q)) '(true))
+  (test "test- <" (run 1 (q) (evalo `((num ,(build-num 2)) < (num ,(build-num 1))) q)) '(false)))

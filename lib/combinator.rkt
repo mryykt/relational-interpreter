@@ -50,7 +50,7 @@
                    (,(list-c '(1 2) '(3 4)))
                    (list-v 1 2 3 4))
         '(((foldl (flip (foldr cons))) ())))
-  (let ([+f '(lam x (lam y (+ (var x) (var y))))]
+  (let ([+f '(lam x (lam y ((var x) + (var y))))]
         [0f '(num ())])
     (test "sum"
           (synthesis 1 (q) 'int (foldlf +f 0f) (,(list-c 1 2 3)) (build-num 6))

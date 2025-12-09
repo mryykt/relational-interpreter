@@ -21,11 +21,11 @@
   [(num ,n) (== t 'int)]
   [true (== t 'bool)]
   [false (== t 'bool)]
-  [(+ ,u ,v) (typedo u env 'int) (typedo v env 'int) (== t 'int)]
-  [(- ,u ,v) (typedo u env 'int) (typedo v env 'int) (== t 'int)]
-  [(* ,u ,v) (typedo u env 'int) (typedo v env 'int) (== t 'int)]
-  [(= ,u ,v) (fresh (a) (typedo u env a) (typedo v env a)) (== t 'bool)]
-  [(< ,u ,v) (typedo u env 'int) (typedo v env 'int) (== t 'bool)]
+  [(,u + ,v) (typedo u env 'int) (typedo v env 'int) (== t 'int)]
+  [(,u - ,v) (typedo u env 'int) (typedo v env 'int) (== t 'int)]
+  [(,u * ,v) (typedo u env 'int) (typedo v env 'int) (== t 'int)]
+  [(,u = ,v) (fresh (a) (typedo u env a) (typedo v env a)) (== t 'bool)]
+  [(,u < ,v) (typedo u env 'int) (typedo v env 'int) (== t 'bool)]
   [(list ,ls)
    (fresh (t^)
           (matche
@@ -51,9 +51,9 @@
              (q)
              (typedo `(app (fix f
                                 n
-                                (if (= (var n) (num ()))
+                                (if ((var n) = (num ()))
                                     (num ,(build-num 1))
-                                    (* (var n) (app (var f) (- (var n) (num ,(build-num 1)))))))
+                                    ((var n) * (app (var f) ((var n) - (num ,(build-num 1)))))))
                            (num ,(build-num 4)))
                      '()
                      q))
@@ -61,8 +61,9 @@
   (test "test-arithmetic"
         (run 1
              (q)
-             (typedo `(+ (num ,(build-num 2))
-                         (- (num ,(build-num 10)) (* (num ,(build-num 3)) (num ,(build-num 3)))))
+             (typedo `((num ,(build-num 2))
+                       +
+                       ((num ,(build-num 10)) - ((num ,(build-num 3)) * (num ,(build-num 3)))))
                      '()
                      q))
         '(int))
@@ -80,7 +81,7 @@
                               ,(build-num 1))
                         (let y (num
                                 ,(build-num 1))
-                          (+ (var x) (var y))))
+                          ((var x) + (var y))))
                      '()
                      q))
         '(int)))
