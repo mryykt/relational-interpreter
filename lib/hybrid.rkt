@@ -30,8 +30,6 @@
 (defrel (inside2o exp env t)
         (matche exp
                 [(var ,x) (symbolo x) (lookupo x env t)]
-                [(num ()) (== t 'int)]
-                [(list ()) (fresh (et) (== t `(list ,et)))]
                 [(cons ,ca ,cd)
                  (fresh (t^) (inside4o ca env t^) (inside4o cd env `(list ,t^)) (== t `(list ,t^)))]
                 [(car ,ls) (inside4o ls env `(list ,t))]
@@ -45,8 +43,6 @@
                 [(= ,u ,v) (fresh (a) (inside3o u env a) (inside3o v env a)) (== t 'bool)]
                 [(< ,u ,v) (inside3o u env 'int) (inside3o v env 'int) (== t 'bool)]
                 [(list ()) (fresh (et) (== t `(list ,et)))]
-                [(cons ,ca ,cd)
-                 (fresh (t^) (inside3o ca env t^) (inside3o cd env `(list ,t^)) (== t `(list ,t^)))]
                 [(car ,ls) (inside3o ls env `(list ,t))]
                 [(cdr ,ls) (inside3o ls env t) (caro 'list t)]))
 
