@@ -11,6 +11,7 @@
          appendo
          lookupo
          mapo
+         allo
          inco
          deco
          ntho)
@@ -46,6 +47,8 @@
 (defrel (mapo p xs ys)
         (conde [(== xs '()) (== ys '())]
                [(fresh (h l h^ l^) (== xs `(,h . ,l)) (== ys `(,h^ . ,l^)) (p h h^) (mapo p l l^))]))
+
+(defrel (allo p xs) (conde [(== xs '())] [(fresh (h l) (== xs `(,h . ,l)) (p h) (allo p l))]))
 
 (defrel (inco n m) (pluso n (build-num 1) m))
 
