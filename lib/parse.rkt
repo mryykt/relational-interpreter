@@ -4,8 +4,7 @@
 (require minikanren/numbers)
 (require "syntax-check.rkt")
 (provide parser
-         unparser
-         run-test)
+         unparser)
 
 (define (app es)
   (match es
