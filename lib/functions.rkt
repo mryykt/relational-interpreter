@@ -2,7 +2,7 @@
 (require syntax/parse/define)
 (require minikanren)
 (require minikanren/numbers)
-(require "interpreter.rkt")
+(require "big-step.rkt")
 (require "test-check.rkt")
 (require "helper.rkt")
 (require "type-inference.rkt")

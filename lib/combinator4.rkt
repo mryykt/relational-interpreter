@@ -3,7 +3,7 @@
 (require minikanren)
 (require minikanren/matche)
 (require minikanren/numbers)
-(require "interpreter.rkt")
+(require "big-step.rkt")
 (require "functions.rkt")
 (require "helper.rkt")
 (require "type-inference.rkt")
