@@ -6,51 +6,51 @@
 (require "utils.rkt")
 (require "test-check.rkt")
 (provide evalo
-         evalo^)
+         eval-expo)
 
-(defrel (evalo^ exp env v)
-        (matche exp
-                [(var ,x) (symbolo x) (lookupo x env v)]
-                [(app ,f ,u)
-                 (fresh (x t env^ uv g)
-                        (evalo^ f env `((,g ,x ,t) . ,env^))
-                        (evalo^ u env uv)
-                        (evalo^ t `((,g . ((,g ,x ,t) . ,env^)) (,x . ,uv) . ,env^) v))]
-                [(lam ,x ,t) (== v `((0 ,x ,t) . ,env))]
-                [(fix ,f ,x ,t) (evalo^ `(var ,f) `((,f . ((,f ,x ,t) . ,env)) . ,env) v)]
-                [(num ,n) (== v n)]
-                [true (== v 'true)]
-                [false (== v 'false)]
-                [(,l + ,r) (binary-op l r env pluso v)]
-                [(,l - ,r) (binary-op l r env minuso v)]
-                [(,l * ,r) (binary-op l r env *o v)]
-                [(,l = ,r) (binary-op l r env eqo v)]
-                [(,l < ,r)
-                 (fresh (lv rv)
-                        (evalo^ l env lv)
-                        (evalo^ r env rv)
-                        (conde [(<o lv rv) (== v 'true)] [(<=o rv lv) (== v 'false)]))]
-                [(list ,ls)
-                 (matche ls [() (== v '())] [(,ca . ,cd) (binary-op ca `(list ,cd) env conso v)])]
-                [(cons ,ca ,cd) (binary-op ca cd env conso v)]
-                [(car ,ls) (fresh (lsv) (evalo^ ls env lsv) (caro v lsv))]
-                [(cdr ,ls) (fresh (lsv) (evalo^ ls env lsv) (cdro v lsv))]
-                [(if ,t ,e1 ,e2)
-                 (fresh (tv)
-                        (evalo^ t env tv)
-                        (conde [(== tv 'true) (evalo^ e1 env v)] [(== tv 'false) (evalo^ e2 env v)]))]
-                [(let ,x
-                   ,t
-                   ,e)
-                 (fresh (tv ce env^ tl) (evalo^ t env tv) (evalo^ e `((,x . ,tv) . ,env) v))]))
+(defrel
+ (eval-expo exp env v)
+ (matche exp
+         [(var ,x) (symbolo x) (lookupo x env v)]
+         [(app ,f ,u)
+          (fresh (x t env^ uv g)
+                 (eval-expo f env `((,g ,x ,t) . ,env^))
+                 (eval-expo u env uv)
+                 (eval-expo t `((,g . ((,g ,x ,t) . ,env^)) (,x . ,uv) . ,env^) v))]
+         [(lam ,x ,t) (== v `((0 ,x ,t) . ,env))]
+         [(fix ,f ,x ,t) (eval-expo `(var ,f) `((,f . ((,f ,x ,t) . ,env)) . ,env) v)]
+         [(num ,n) (== v n)]
+         [true (== v 'true)]
+         [false (== v 'false)]
+         [(,l + ,r) (binary-op l r env pluso v)]
+         [(,l - ,r) (binary-op l r env minuso v)]
+         [(,l * ,r) (binary-op l r env *o v)]
+         [(,l = ,r) (binary-op l r env eqo v)]
+         [(,l < ,r)
+          (fresh (lv rv)
+                 (eval-expo l env lv)
+                 (eval-expo r env rv)
+                 (conde [(<o lv rv) (== v 'true)] [(<=o rv lv) (== v 'false)]))]
+         [(list ,ls) (matche ls [() (== v '())] [(,ca . ,cd) (binary-op ca `(list ,cd) env conso v)])]
+         [(cons ,ca ,cd) (binary-op ca cd env conso v)]
+         [(car ,ls) (fresh (lsv) (eval-expo ls env lsv) (caro v lsv))]
+         [(cdr ,ls) (fresh (lsv) (eval-expo ls env lsv) (cdro v lsv))]
+         [(if ,t ,e1 ,e2)
+          (fresh (tv)
+                 (eval-expo t env tv)
+                 (conde [(== tv 'true) (eval-expo e1 env v)] [(== tv 'false) (eval-expo e2 env v)]))]
+         [(let ,x
+            ,t
+            ,e)
+          (fresh (tv ce env^ tl) (eval-expo t env tv) (eval-expo e `((,x . ,tv) . ,env) v))]))
 
 (defrel (eqo l r v) (conde [(== l r) (== v 'true)] [(=/= l r) (== v 'false)]))
 
 (define-syntax binary-op
   (syntax-rules ()
-    [(_ l r env op v) (fresh (__l __r) (evalo^ l env __l) (evalo^ r env __r) (op __l __r v))]))
+    [(_ l r env op v) (fresh (__l __r) (eval-expo l env __l) (eval-expo r env __r) (op __l __r v))]))
 
-(defrel (evalo exp v) (evalo^ exp '() v))
+(defrel (evalo exp v) (eval-expo exp '() v))
 
 (define (run-test)
   (test "test-fun" (run 1 (q) (evalo `(app (lam x (var x)) (num ,(build-num 1))) q)) '((1)))
