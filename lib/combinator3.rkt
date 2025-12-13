@@ -9,43 +9,42 @@
 (require "type-inference.rkt")
 (require "test-check.rkt")
 (require "utils.rkt")
+(require "parse.rkt")
 
 (provide synthesis
          run-test)
 
-(defrel (translateo src dst env env^ t)
-        (matche src
-                [(,u ,v)
-                 (fresh (a b t0 env^^)
-                        (translateo u a env env^^ `(fun ,t0 ,t))
-                        (translateo v b env^^ env^ t0)
-                        (== dst `(app ,a ,b)))]
-                [,u (symbolo u) (lookupo u env t) (== dst `(var ,u)) (rembero u env env^)]
-                [() (fresh (et) (== t `(list ,et)) (== dst '(list ())) (== env env^))]))
+(defrel
+ (combinator src env env^ t)
+ (matche src
+         [(app ,u ,v)
+          (fresh (t0 env^^) (combinator u env env^^ `(fun ,t0 ,t)) (combinator v env^^ env^ t0))]
+         [(var ,u) (symbolo u) (lookupo u env t) (rembero u env env^)]
+         [(list ()) (fresh (et) (== t `(list ,et)) (== env env^))]))
 
 (define-syntax synthesis
   (syntax-rules ()
     [(_ n (q) t (input ...) output)
      (run n
           (q)
-          (fresh (env tenv dst res)
+          (fresh (env tenv res)
                  (mapo typed-helpero all-functions-list tenv)
-                 (translateo q dst tenv res t)
-                 (evalo (with-all-functions (apps ,dst input ...)) output)))]
+                 (combinator q tenv res t)
+                 (evalo (with-all-functions (apps ,q input ...)) output)))]
     [(_ n (q) t (function ...) (input ...) output)
      (let ([env `((,(symbol-trim-last 'function) . ,function) ...)])
        (run n
             (q)
-            (fresh (tenv dst res)
+            (fresh (tenv res)
                    (mapo typed-helpero env tenv)
-                   (translateo q dst tenv res t)
-                   (evalo (with-functions env (apps ,dst input ...)) output))))]))
+                   (combinator q tenv res t)
+                   (evalo (with-functions env (apps ,q input ...)) output))))]))
 
 (define (run-test)
   (test
    "reverse"
    (synthesis 1 (q) '(fun (list int) (list int)) (foldlf flipf consf) (,(list-c 1 2)) (list-v 2 1))
-   '(((foldl (flip cons)) ())))
+   `(,(parser '(foldl (flip cons) (list)))))
   (test "append"
         (synthesis 1
                    (q)
@@ -53,7 +52,7 @@
                    (foldrf consf flipf)
                    (,(list-c 1 2) ,(list-c 3 4))
                    (list-v 1 2 3 4))
-        '((flip (foldr cons))))
+        `(,(parser '(flip (foldr cons)))))
   (test "concat"
         (synthesis 1
                    (q)
@@ -61,12 +60,12 @@
                    (foldrf foldlf flipf consf)
                    (,(list-c '(1 2) '(3 4)))
                    (list-v 1 2 3 4))
-        '(((foldl (flip (foldr cons))) ())))
-  (let ([+f '(lam x (lam y ((var x) + (var y))))]
-        [0f '(lam x (num ()))])
+        `(,(parser '(foldl (flip (foldr cons)) (list)))))
+  (let ([addf '(lam x (lam y ((var x) + (var y))))]
+        [0f '(num ())])
     (test "sum"
-          (synthesis 1 (q) '(fun (list int) int) (foldlf +f 0f) (,(list-c 1 2 3)) (build-num 6))
-          '(((foldl +) (|0| ())))))
+          (synthesis 1 (q) '(fun (list int) int) (foldlf addf 0f) (,(list-c 1 2 3)) (build-num 6))
+          `(,(parser '(foldl add |0|)))))
   (test "isort"
         (synthesis 1
                    (q)
@@ -74,4 +73,4 @@
                    (noEmptyf sortHelperf ltf fromHeadf)
                    (,(list-c 3 1 2))
                    (list-v 1 2 3))
-        '((fromHead (noEmpty (sortHelper lt))))))
+        `(,(parser '(fromHead (noEmpty (sortHelper lt)))))))
