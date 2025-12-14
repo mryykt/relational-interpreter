@@ -4,6 +4,7 @@
 (require minikanren/matche)
 (require minikanren/numbers)
 (require "big-step.rkt")
+; (require "small-step.rkt")
 (require "functions.rkt")
 (require "helper.rkt")
 (require "type-inference.rkt")
