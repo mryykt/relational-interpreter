@@ -20,7 +20,10 @@
          [(app ,u ,v)
           (fresh (t0 env^^) (combinator u env env^^ `(fun ,t0 ,t)) (combinator v env^^ env^ t0))]
          [(var ,u) (symbolo u) (lookupo u env t) (rembero u env env^)]
-         [(list ()) (fresh (et) (== t `(list ,et)) (== env env^))]))
+         [() (fresh (et) (== t `(list ,et)) (== env env^))]))
+
+(defrel (typed-helpero ne nt)
+        (matche ne [(,name . ,body) (fresh (t) (typedo body '() t) (== nt `(,name . ,t)))]))
 
 (define-syntax synthesis
   (syntax-rules ()
@@ -44,7 +47,7 @@
   (test
    "reverse"
    (synthesis 1 (q) '(fun (list int) (list int)) (foldlf flipf consf) (,(list-c 1 2)) (list-v 2 1))
-   `(,(parser '(foldl (flip cons) (list)))))
+   `(,(parser '(foldl (flip cons) ()))))
   (test "append"
         (synthesis 1
                    (q)
@@ -60,7 +63,7 @@
                    (foldrf foldlf flipf consf)
                    (,(list-c '(1 2) '(3 4)))
                    (list-v 1 2 3 4))
-        `(,(parser '(foldl (flip (foldr cons)) (list)))))
+        `(,(parser '(foldl (flip (foldr cons)) ()))))
   (let ([addf '(lam x (lam y ((var x) + (var y))))]
         [0f '(num ())])
     (test "sum"

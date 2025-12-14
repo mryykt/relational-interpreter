@@ -5,44 +5,45 @@
 (require minikanren/numbers)
 (require "utils.rkt")
 (require "test-check.rkt")
+(require "helper.rkt")
 (provide evalo
          eval-expo)
 
-(defrel
- (eval-expo exp env v)
- (matche exp
-         [(var ,x) (symbolo x) (lookupo x env v)]
-         [(app ,f ,u)
-          (fresh (x t env^ uv g)
-                 (eval-expo f env `((,g ,x ,t) . ,env^))
-                 (eval-expo u env uv)
-                 (eval-expo t `((,g . ((,g ,x ,t) . ,env^)) (,x . ,uv) . ,env^) v))]
-         [(lam ,x ,t) (== v `((0 ,x ,t) . ,env))]
-         [(fix ,f ,x ,t) (eval-expo `(var ,f) `((,f . ((,f ,x ,t) . ,env)) . ,env) v)]
-         [(num ,n) (== v n)]
-         [true (== v 'true)]
-         [false (== v 'false)]
-         [(,l + ,r) (binary-op l r env pluso v)]
-         [(,l - ,r) (binary-op l r env minuso v)]
-         [(,l * ,r) (binary-op l r env *o v)]
-         [(,l = ,r) (binary-op l r env eqo v)]
-         [(,l < ,r)
-          (fresh (lv rv)
-                 (eval-expo l env lv)
-                 (eval-expo r env rv)
-                 (conde [(<o lv rv) (== v 'true)] [(<=o rv lv) (== v 'false)]))]
-         [(list ,ls) (matche ls [() (== v '())] [(,ca . ,cd) (binary-op ca `(list ,cd) env conso v)])]
-         [(cons ,ca ,cd) (binary-op ca cd env conso v)]
-         [(car ,ls) (fresh (lsv) (eval-expo ls env lsv) (caro v lsv))]
-         [(cdr ,ls) (fresh (lsv) (eval-expo ls env lsv) (cdro v lsv))]
-         [(if ,t ,e1 ,e2)
-          (fresh (tv)
-                 (eval-expo t env tv)
-                 (conde [(== tv 'true) (eval-expo e1 env v)] [(== tv 'false) (eval-expo e2 env v)]))]
-         [(let ,x
-            ,t
-            ,e)
-          (fresh (tv ce env^ tl) (eval-expo t env tv) (eval-expo e `((,x . ,tv) . ,env) v))]))
+(defrel (eval-expo exp env v)
+        (matche exp
+                [(var ,x) (symbolo x) (lookupo x env v)]
+                [(app ,f ,u)
+                 (fresh (x t env^ uv g)
+                        (eval-expo f env `((,g ,x ,t) . ,env^))
+                        (eval-expo u env uv)
+                        (eval-expo t `((,g . ((,g ,x ,t) . ,env^)) (,x . ,uv) . ,env^) v))]
+                [(lam ,x ,t) (== v `((0 ,x ,t) . ,env))]
+                [(fix ,f ,x ,t) (eval-expo `(var ,f) `((,f . ((,f ,x ,t) . ,env)) . ,env) v)]
+                [(num ,n) (== v n)]
+                [true (== v 'true)]
+                [false (== v 'false)]
+                [(,l + ,r) (binary-op l r env pluso v)]
+                [(,l - ,r) (binary-op l r env minuso v)]
+                [(,l * ,r) (binary-op l r env *o v)]
+                [(,l = ,r) (binary-op l r env eqo v)]
+                [(,l < ,r)
+                 (fresh (lv rv)
+                        (eval-expo l env lv)
+                        (eval-expo r env rv)
+                        (conde [(<o lv rv) (== v 'true)] [(<=o rv lv) (== v 'false)]))]
+                [() (== v '())]
+                [(cons ,ca ,cd) (binary-op ca cd env conso v)]
+                [(car ,ls) (fresh (lsv) (eval-expo ls env lsv) (caro v lsv))]
+                [(cdr ,ls) (fresh (lsv) (eval-expo ls env lsv) (cdro v lsv))]
+                [(if ,t ,e1 ,e2)
+                 (fresh (tv)
+                        (eval-expo t env tv)
+                        (conde [(== tv 'true) (eval-expo e1 env v)]
+                               [(== tv 'false) (eval-expo e2 env v)]))]
+                [(let ,x
+                   ,t
+                   ,e)
+                 (fresh (tv ce env^ tl) (eval-expo t env tv) (eval-expo e `((,x . ,tv) . ,env) v))]))
 
 (defrel (eqo l r v) (conde [(== l r) (== v 'true)] [(=/= l r) (== v 'false)]))
 
@@ -113,28 +114,18 @@
         `(,(build-num 1)))
   (test "test-eq-1" (run 1 (q) (evalo `((num ,(build-num 10)) = (num ,(build-num 11))) q)) '(false))
   (test "test-eq-2" (run 1 (q) (evalo `((num ,(build-num 10)) = (num ,(build-num 10))) q)) '(true))
-  (test "test-list"
-        (run 1 (q) (evalo `(list ((num ,(build-num 1)) (num ,(build-num 2)) (num ,(build-num 3)))) q))
-        `((,(build-num 1) ,(build-num 2) ,(build-num 3))))
-  (test "test-car"
-        (run 1
-             (q)
-             (evalo `(car (list ((num ,(build-num 1)) (num ,(build-num 2)) (num ,(build-num 3))))) q))
-        `(,(build-num 1)))
-  (test "test-cdr"
-        (run 1
-             (q)
-             (evalo `(cdr (list ((num ,(build-num 1)) (num ,(build-num 2)) (num ,(build-num 3))))) q))
-        `((,(build-num 2) ,(build-num 3))))
+  (test "test-list" (run 1 (q) (evalo (list-c 1 2 3) q)) `(,(list-v 1 2 3)))
+  (test "test-car" (run 1 (q) (evalo `(car ,(list-c 1 2 3)) q)) `(,(build-num 1)))
+  (test "test-cdr" (run 1 (q) (evalo `(cdr ,(list-c 1 2 3)) q)) `(,(list-v 2 3)))
   (test "test-list-length"
         (run 1
              (q)
              (evalo `(app (fix f
                                x
-                               (if ((var x) = (list ()))
+                               (if ((var x) = ())
                                    (num ,(build-num 0))
                                    ((num ,(build-num 1)) + (app (var f) (cdr (var x))))))
-                          (list ((num ,(build-num 1)) (num ,(build-num 2)) (num ,(build-num 3)))))
+                          ,(list-c 1 2 3))
                     q))
         `(,(build-num 3)))
   (test "test-list-append"
@@ -143,13 +134,13 @@
              (evalo `(app (app (fix f
                                     x
                                     (lam y
-                                         (if ((var x) = (list ()))
+                                         (if ((var x) = ())
                                              (var y)
                                              (cons (car (var x))
                                                    (app (app (var f) (cdr (var x))) (var y))))))
-                               (list ((num ,(build-num 1)) (num ,(build-num 2)))))
-                          (list ((num ,(build-num 3)))))
+                               ,(list-c 1 2))
+                          ,(list-c 3))
                     q))
-        `((,(build-num 1) ,(build-num 2) ,(build-num 3))))
+        `(,(list-v 1 2 3)))
   (test "test- <" (run 1 (q) (evalo `((num ,(build-num 1)) < (num ,(build-num 2))) q)) '(true))
   (test "test- <" (run 1 (q) (evalo `((num ,(build-num 2)) < (num ,(build-num 1))) q)) '(false)))

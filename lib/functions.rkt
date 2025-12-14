@@ -106,7 +106,7 @@
                          g
                          (lam acc
                               (lam xs
-                                   (if ((var xs) = (list ()))
+                                   (if ((var xs) = ())
                                        (var acc)
                                        (app (app (app (var f) (var g))
                                                  (app (app (var g) (var acc)) (car (var xs))))
@@ -117,7 +117,7 @@
                          g
                          (lam init
                               (lam xs
-                                   (if ((var xs) = (list ()))
+                                   (if ((var xs) = ())
                                        (var init)
                                        (app (app (var g) (car (var xs)))
                                             (app (app (app (var f) (var g)) (var init))
@@ -127,8 +127,8 @@
                    '(fix f
                          g
                          (lam xs
-                              (if ((var xs) = (list ()))
-                                  (list ())
+                              (if ((var xs) = ())
+                                  ()
                                   (cons (app (var g) (car (var xs)))
                                         (app (app (var f) (var g)) (cdr (var xs))))))))
 
@@ -137,8 +137,8 @@
                          g
                          (lam acc
                               (lam xs
-                                   (if ((var xs) = (list ()))
-                                       (list ())
+                                   (if ((var xs) = ())
+                                       ()
                                        (let acc2 (app
                                                   [app
                                                    (var g)
@@ -154,12 +154,12 @@
     ,foldrf
     (lam xs (lam ys ,(apps (var foldr) (lam x (lam y (cons (var x) (var y)))) (var ys) (var xs))))))
 
-(def-list-function concatf (make-program foldlf appendf ,(apps (var foldl) (var append) (list ()))))
+(def-list-function concatf (make-program foldlf appendf ,(apps (var foldl) (var append) ())))
 
 (def-list-function lengthf
                    '(fix f
                          xs
-                         (if ((var xs) = (list ()))
+                         (if ((var xs) = ())
                              (num ())
                              ((num (1)) + (app (var f) (cdr (var xs)))))))
 
@@ -167,8 +167,8 @@
                    `(fix f
                          g
                          (lam xs
-                              (if ((var xs) = (list ()))
-                                  (list ())
+                              (if ((var xs) = ())
+                                  ()
                                   (let tail ,(apps (var f) (var g) (cdr (var xs)))
                                     (if (app (var g) (car (var xs)))
                                         (cons (car (var xs)) (var tail))
@@ -185,10 +185,10 @@
                (fix f
                     g
                     (lam xs
-                         (if ((var xs) = (list ()))
-                             (list ())
+                         (if ((var xs) = ())
+                             ()
                              (let temp ,(apps (var filter)
-                                              (lam x (app (var not) ((var x) = (list ()))))
+                                              (lam x (app (var not) ((var x) = ())))
                                               (app [var g] [var xs]))
                                (if ((app (var length) (var temp)) = (num (1)))
                                    (car (var temp))
@@ -200,8 +200,8 @@
  `(fix f
        g
        (lam xs
-            (if ((var xs) = (list ()))
-                (list ())
+            (if ((var xs) = ())
+                ()
                 ,(apps (var g) (car (var xs)) ,(apps (var f) (var g) (cdr (var xs))))))))
 
 (def-advanced-list-function
@@ -210,8 +210,8 @@
        g
        (lam x
             (lam xs
-                 (if ((var xs) = (list ()))
-                     (list ((var x)))
+                 (if ((var xs) = ())
+                     (cons (var x) ())
                      ,(apps (var g) (app (var f) (var g)) (var x) (car (var xs)) (cdr (var xs))))))))
 
 (def-advanced-list-function
@@ -242,25 +242,20 @@
   (test "foldl"
         (run 1
              (q)
-             (evalo
-              (make-program foldlf
-                            flipf
-                            consf
-                            ,(apps (var foldl) (app (var flip) (var cons)) (list ()) ,(list-c 1 2 3)))
-              q))
+             (evalo (make-program foldlf
+                                  flipf
+                                  consf
+                                  ,(apps (var foldl) (app (var flip) (var cons)) () ,(list-c 1 2 3)))
+                    q))
         `(,(list-v 3 2 1)))
   (test
    "foldr"
-   (run 1
-        (q)
-        (evalo (make-program foldrf consf ,(apps (var foldr) (var cons) (list ()) ,(list-c 1 2 3)))
-               q))
+   (run 1 (q) (evalo (make-program foldrf consf ,(apps (var foldr) (var cons) () ,(list-c 1 2 3))) q))
    `(,(list-v 1 2 3)))
   (test "map"
         (run 1
              (q)
-             (evalo (make-program mapf
-                                  ,(apps (var map) (lam x (cons (var x) (list ()))) ,(list-c 1 2 3)))
+             (evalo (make-program mapf ,(apps (var map) (lam x (cons (var x) ())) ,(list-c 1 2 3)))
                     q))
         `(,(list-v '(1) '(2) '(3))))
   (test "scanl"
@@ -288,15 +283,16 @@
                      ,(apps (var filter) (lam x ((var x) = (num ()))) ,(list-c 1 0 0 1 0 1 1 0)))
                     q))
         `(,(list-v 0 0 0 0)))
-  (test "merge"
-        (run 1
-             (q)
-             (evalo (make-program mergef
-                                  ,(apps (var merge)
-                                         (lam xs (list ((list ((car (var xs)))) (cdr (var xs)))))
-                                         ,(list-c 1 2 3)))
-                    q))
-        `(,(list-v 1 2 3)))
+  (test
+   "merge"
+   (run 1
+        (q)
+        (evalo (make-program mergef
+                             ,(apps (var merge)
+                                    (lam xs (cons (cons (car (var xs)) ()) (cons (cdr (var xs)) ())))
+                                    ,(list-c 1 2 3)))
+               q))
+   `(,(list-v 1 2 3)))
   (test "qsort"
         (run 1
              (q)
@@ -306,13 +302,14 @@
                      filterf
                      ,(apps (var merge)
                             (lam xs
-                                 (list (,(apps (var filter)
-                                               (lam x (app (var not) ((car (var xs)) < (var x))))
-                                               (cdr (var xs)))
-                                        (list ((car (var xs))))
-                                        ,(apps (var filter)
-                                               (lam x ((car (var xs)) < (var x)))
-                                               (cdr (var xs))))))
+                                 (cons ,(apps (var filter)
+                                              (lam x (app (var not) ((car (var xs)) < (var x))))
+                                              (cdr (var xs)))
+                                       (cons (cons (car (var xs)) ())
+                                             (cons ,(apps (var filter)
+                                                          (lam x ((car (var xs)) < (var x)))
+                                                          (cdr (var xs)))
+                                                   ()))))
                             ,(list-c 3 1 2 6 7 4 5)))
                     q))
         `(,(list-v 1 2 3 4 5 6 7)))

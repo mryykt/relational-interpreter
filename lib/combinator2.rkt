@@ -15,7 +15,10 @@
         (matche src
                 [(app ,u ,v) (fresh (t0) (combinator u env `(fun ,t0 ,t)) (combinator v env t0))]
                 [(var ,u) (symbolo u) (lookupo u env t)]
-                [(list ()) (fresh (et) (== t `(list ,et)))]))
+                [() (fresh (et) (== t `(list ,et)))]))
+
+(defrel (typed-helpero ne nt)
+        (matche ne [(,name . ,body) (fresh (t) (typedo body '() t) (== nt `(,name . ,t)))]))
 
 (define-syntax synthesis
   (syntax-rules ()
@@ -41,7 +44,7 @@
   (test
    "reverse"
    (synthesis 1 (q) '(fun (list int) (list int)) (foldlf flipf consf) (,(list-c 1 2)) (list-v 2 1))
-   '((foldl (flip cons) (list))))
+   '((foldl (flip cons) ())))
   (test "append"
         (synthesis 1
                    (q)
@@ -57,12 +60,12 @@
                    (foldrf foldlf flipf consf)
                    (,(list-c '(1 2) '(3 4)))
                    (list-v 1 2 3 4))
-        '((foldl (flip (foldr cons)) (list))))
+        '((foldl (flip (foldr cons)) ())))
   (let ([+f '(lam x (lam y ((var x) + (var y))))]
         [0f '(lam x (num ()))])
     (test "sum"
           (synthesis 1 (q) '(fun (list int) int) (foldlf +f 0f) (,(list-c 1 2 3)) (build-num 6))
-          '((foldl + (|0| (list))))))
+          '((foldl + (|0| ())))))
   (test "isort"
         (synthesis 1
                    (q)

@@ -14,7 +14,7 @@
         (matche src
                 [(,u ,v) (fresh (a b) (translateo u a) (translateo v b) (== dst `(app ,a ,b)))]
                 [,u (symbolo u) (== dst `(var ,u))]
-                [() (== dst '(list ()))]))
+                [() (== dst '())]))
 
 (define-syntax synthesis
   (syntax-rules ()

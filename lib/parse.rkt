@@ -15,9 +15,7 @@
   (match exp
     [#t 'true]
     [#f 'false]
-    [(list l x ...)
-     #:when (equal? l 'list)
-     `(list ,(map parser x))]
+    [(list) '()]
     [(list l x e)
      #:when (equal? l 'lambda)
      `(lam ,x ,(parser e))]
@@ -66,9 +64,7 @@
     [(list n x)
      #:when (equal? n 'num)
      (unbuild-num x)]
-    [(list l x)
-     #:when (equal? l 'list)
-     `(list . ,(map unparser x))]
+    [(list) '()]
     [(list v x)
      #:when (equal? v 'var)
      x]
@@ -114,7 +110,7 @@
                    (displayln
                     (format "ng: ~a\n   => ~a\n   => ~a" e (unparser e) (parser (unparser e))))
                    #f)))])
-    (if (and (list? exp) (pair? (car exp)))
+    (if (and (list? exp) (not (null? exp)) (pair? (car exp)))
         (f (car exp))
         (f exp))))
 

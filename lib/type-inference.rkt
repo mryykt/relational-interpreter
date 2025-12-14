@@ -4,6 +4,7 @@
 (require minikanren/matche)
 (require "utils.rkt")
 (require "test-check.rkt")
+(require "helper.rkt")
 (require minikanren/numbers)
 
 (provide typedo
@@ -11,35 +12,30 @@
 
 (defrel
  (typedo exp env t)
- (matche
-  exp
-  [(var ,x) (symbolo x) (lookupo x env t)]
-  [(app ,f ,u) (fresh (a) (typedo f env `(fun ,a ,t)) (typedo u env a))]
-  [(lam ,x ,u) (fresh (a b) (typedo u `((,x . ,a) . ,env) b) (== t `(fun ,a ,b)))]
-  [(fix ,f ,x ,u)
-   (fresh (a b) (typedo u `((,f . (fun ,a ,b)) . ((,x . ,a) . ,env)) b) (== t `(fun ,a ,b)))]
-  [(num ,n) (== t 'int)]
-  [true (== t 'bool)]
-  [false (== t 'bool)]
-  [(,u + ,v) (typedo u env 'int) (typedo v env 'int) (== t 'int)]
-  [(,u - ,v) (typedo u env 'int) (typedo v env 'int) (== t 'int)]
-  [(,u * ,v) (typedo u env 'int) (typedo v env 'int) (== t 'int)]
-  [(,u = ,v) (fresh (a) (typedo u env a) (typedo v env a)) (== t 'bool)]
-  [(,u < ,v) (typedo u env 'int) (typedo v env 'int) (== t 'bool)]
-  [(list ,ls)
-   (fresh (t^)
-          (matche
-           ls
-           [() (== t `(list ,t^))]
-           [(,ca . ,cd) (typedo ca env t^) (typedo `(list ,cd) env `(list ,t^)) (== t `(list ,t^))]))]
-  [(cons ,ca ,cd) (fresh (t^) (typedo ca env t^) (typedo cd env `(list ,t^)) (== t `(list ,t^)))]
-  [(car ,ls) (typedo ls env `(list ,t))]
-  [(cdr ,ls) (typedo ls env t) (caro 'list t)]
-  [(if ,e ,u ,v) (typedo e env 'bool) (typedo u env t) (typedo v env t)]
-  [(let ,x
-     ,e1
-     ,e2)
-   (fresh (te1) (typedo e1 env te1) (typedo e2 `((,x . ,te1) . ,env) t))]))
+ (matche exp
+         [(var ,x) (symbolo x) (lookupo x env t)]
+         [(app ,f ,u) (fresh (a) (typedo f env `(fun ,a ,t)) (typedo u env a))]
+         [(lam ,x ,u) (fresh (a b) (typedo u `((,x . ,a) . ,env) b) (== t `(fun ,a ,b)))]
+         [(fix ,f ,x ,u)
+          (fresh (a b) (typedo u `((,f . (fun ,a ,b)) . ((,x . ,a) . ,env)) b) (== t `(fun ,a ,b)))]
+         [(num ,n) (== t 'int)]
+         [true (== t 'bool)]
+         [false (== t 'bool)]
+         [(,u + ,v) (typedo u env 'int) (typedo v env 'int) (== t 'int)]
+         [(,u - ,v) (typedo u env 'int) (typedo v env 'int) (== t 'int)]
+         [(,u * ,v) (typedo u env 'int) (typedo v env 'int) (== t 'int)]
+         [(,u = ,v) (fresh (a) (typedo u env a) (typedo v env a)) (== t 'bool)]
+         [(,u < ,v) (typedo u env 'int) (typedo v env 'int) (== t 'bool)]
+         [() (fresh (t^) (== t `(list ,t^)))]
+         [(cons ,ca ,cd)
+          (fresh (t^) (typedo ca env t^) (typedo cd env `(list ,t^)) (== t `(list ,t^)))]
+         [(car ,ls) (typedo ls env `(list ,t))]
+         [(cdr ,ls) (typedo ls env t) (caro 'list t)]
+         [(if ,e ,u ,v) (typedo e env 'bool) (typedo u env t) (typedo v env t)]
+         [(let ,x
+            ,e1
+            ,e2)
+          (fresh (te1) (typedo e1 env te1) (typedo e2 `((,x . ,te1) . ,env) t))]))
 
 (defrel (typed-evalo exp t result) (typedo exp '() t) (evalo exp result))
 
@@ -68,11 +64,7 @@
                      q))
         '(int))
   (test "test-list"
-        (run 1
-             (q)
-             (typedo `(app (lam x (cons (car (var x)) (cdr (var x)))) (list ((num ,(build-num 1)))))
-                     '()
-                     q))
+        (run 1 (q) (typedo `(app (lam x (cons (car (var x)) (cdr (var x)))) ,(list-c 1)) '() q))
         '((list int)))
   (test "test-let"
         (run 1

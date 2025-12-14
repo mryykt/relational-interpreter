@@ -12,7 +12,10 @@
 (defmatche (translateo src dst)
            [((,f ,x) (app ,f^ ,x^)) (translateo f f^) (translateo x x^)]
            [(,v (var ,v)) (symbolo v)]
-           [(() (list ()))])
+           [(() ())])
+
+(defrel (typed-helpero ne nt)
+        (matche ne [(,name . ,body) (fresh (t) (typedo body '() t) (== nt `(,name . ,t)))]))
 
 (define-syntax synthesis
   (syntax-rules ()

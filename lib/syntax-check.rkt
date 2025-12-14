@@ -21,7 +21,7 @@
                 [(,u * ,v) (syntax-checko u) (syntax-checko v)]
                 [(,u = ,v) (fresh (a) (syntax-checko u) (syntax-checko v))]
                 [(,u < ,v) (syntax-checko u) (syntax-checko v)]
-                [(list ,ls) (allo syntax-checko ls)]
+                [()]
                 [(cons ,ca ,cd) (syntax-checko ca) (syntax-checko cd)]
                 [(car ,ls) (syntax-checko ls)]
                 [(cdr ,ls) (syntax-checko ls)]
