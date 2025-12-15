@@ -64,8 +64,8 @@
         '((foldl (flip (foldr cons)) ())))
   (let ([0f '(num ())])
     (test "sum"
-          (synthesis 1 (q) '(fun (list int) int) (foldlf 0f) (,(list-c 1 2 3)) (build-num 6))
-          '((foldl add |0|))))
+          (synthesis 1 (q) '(fun (list int) int) (foldlf) (,(list-c 1 2 3)) (build-num 6))
+          '((foldl add 0))))
   (test "isort"
         (synthesis 1
                    (q)
@@ -82,8 +82,20 @@
                    ((num ,(build-num 5)) ,(list-c 1 2 3))
                    (list-v 6 7 8))
         '((compose map add)))
-  (let ([0f '(num ())]
-        [1f '(num (1))])
-    (test "length"
-          (synthesis 1 (q) '(fun (list int) int) (foldrf 0f 1f) (,(list-c 1 2 3)) (build-num 3))
-          '((foldr (const (add |1|)) |0|)))))
+  (test "length"
+        (synthesis 1 (q) '(fun (list int) int) (foldrf) (,(list-c 2 2 2)) (build-num 3))
+        '((foldr (const (add 1)) 0)))
+  (test "rember"
+        (synthesis 1
+                   (q)
+                   '(fun int (fun (list int) (list int)))
+                   (filterf)
+                   ((num ,(build-num 2)) ,(list-c 1 2 3))
+                   (list-v 1 3))
+        '((compose filter neq)))
+  (test "maximize"
+        (synthesis 1 (q) '(fun (list int) int) (foldrf) (,(list-c 1 2 3 2 1)) (build-num 3))
+        '((foldr max 0)))
+  (test "minimize"
+        (synthesis 1 (q) '(fun (list int) int) (foldrf) (,(list-c 3 2 5 2 3)) (build-num 2))
+        '((foldr min 0))))
