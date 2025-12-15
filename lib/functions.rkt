@@ -97,6 +97,14 @@
 (def-basic-function ltf '(lam x (lam y ((var x) < (var y)))))
 
 (def-basic-function addf '(lam x (lam y ((var x) + (var y)))))
+
+(def-basic-function eqf (parser '(lambda (x y) (x = y))))
+
+(def-basic-function neqf (parser '(lambda (x y) (if (x = y) #f #t))))
+
+(def-basic-function maxf (parser '(lambda (x y) (if (x < y) y x))))
+
+(def-basic-function minf (parser '(lambda (x y) (if (x < y) x y))))
 ; basic combinator
 
 (def-basic-function flipf '(lam f (lam x (lam y (app (app (var f) (var y)) (var x))))))
