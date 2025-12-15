@@ -1,5 +1,6 @@
 #lang racket
 (provide test)
+(require racket/sandbox)
 
 (define test-failed (make-parameter #f))
 
@@ -9,7 +10,7 @@
      (begin
        (printf "Testing ~s\n" title)
        (let* ([expected expected-result]
-              [produced (time tested-expression)])
+              [produced (call-with-limits 300 #f (lambda () (time tested-expression)))])
          (or (equal? expected produced)
              (begin
                (test-failed #t)
