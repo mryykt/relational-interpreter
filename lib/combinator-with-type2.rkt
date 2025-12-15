@@ -15,6 +15,8 @@
         (matche src
                 [(app ,u ,v) (fresh (t0) (combinator u env `(fun ,t0 ,t)) (combinator v env t0))]
                 [(var ,u) (symbolo u) (lookup2o u env t)]
+                [(num ()) (== t 'int)]
+                [(num (1)) (== t 'int)]
                 [() (fresh (et) (== t `(list ,et)))]))
 
 (defrel (typed-helpero ne nt)
