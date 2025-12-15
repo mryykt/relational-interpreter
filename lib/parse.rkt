@@ -16,9 +16,11 @@
     [#t 'true]
     [#f 'false]
     [(list) '()]
-    [(list l x e)
+    [(list l xs e)
      #:when (equal? l 'lambda)
-     `(lam ,x ,(parser e))]
+     (if (pair? xs)
+         `(lam ,(car xs) ,(parser `(lambda ,(cdr xs) ,e)))
+         (parser e))]
     [(list l f x e)
      #:when (equal? l 'fix)
      `(fix ,f ,x ,(parser e))]
@@ -70,7 +72,10 @@
      x]
     [(list l x e)
      #:when (equal? l 'lam)
-     `(lambda ,x ,(unparser e))]
+     (if (and (pair? e) (equal? (car e) 'lam))
+         (match (unparser e)
+           [(list _ xs e) `(lambda (,x . ,xs) ,e)])
+         `(lambda (,x) ,(unparser e)))]
     [(list l f x e)
      #:when (equal? l 'fix)
      `(fix ,f ,x ,(unparser e))]
