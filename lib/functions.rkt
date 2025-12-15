@@ -6,6 +6,7 @@
 (require "test-check.rkt")
 (require "helper.rkt")
 (require "type-inference.rkt")
+(require "parse.rkt")
 
 (provide (all-defined-out))
 
@@ -102,6 +103,7 @@
 
 (def-basic-function composef '(lam f (lam g (lam x (app (var f) (app (var g) (var x)))))))
 
+(def-basic-function constf (parser '(lambda (x y) x)))
 ; list functions
 (def-list-function foldlf
                    '(fix f

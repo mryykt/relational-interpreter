@@ -31,7 +31,7 @@
                       (combinator q tenv t)
                       (evalo (with-all-functions (apps ,q input ...)) output))))]
     [(_ n (q) t (function ...) (input ...) output)
-     (let ([env `((,(symbol-trim-last 'function) . ,function) ...)])
+     (let ([env (append `((,(symbol-trim-last 'function) . ,function) ...) all-basic-functions)])
        (map unparser
             (run n
                  (q)
@@ -41,15 +41,14 @@
                         (evalo (with-functions env (apps ,q input ...)) output)))))]))
 
 (define (run-test)
-  (test
-   "reverse"
-   (synthesis 1 (q) '(fun (list int) (list int)) (foldlf flipf consf) (,(list-c 1 2)) (list-v 2 1))
-   '((foldl (flip cons) ())))
+  (test "reverse"
+        (synthesis 1 (q) '(fun (list int) (list int)) (foldlf) (,(list-c 1 2)) (list-v 2 1))
+        '((foldl (flip cons) ())))
   (test "append"
         (synthesis 1
                    (q)
                    '(fun (list int) (fun (list int) (list int)))
-                   (foldrf consf flipf)
+                   (foldrf)
                    (,(list-c 1 2) ,(list-c 3 4))
                    (list-v 1 2 3 4))
         '((flip (foldr cons))))
@@ -57,28 +56,32 @@
         (synthesis 1
                    (q)
                    '(fun (list (list int)) (list int))
-                   (foldrf foldlf flipf consf)
+                   (foldrf foldlf)
                    (,(list-c '(1 2) '(3 4)))
                    (list-v 1 2 3 4))
         '((foldl (flip (foldr cons)) ())))
-  (let ([+f '(lam x (lam y ((var x) + (var y))))]
-        [0f '(lam x (num ()))])
+  (let ([0f '(num ())])
     (test "sum"
-          (synthesis 1 (q) '(fun (list int) int) (foldlf +f 0f) (,(list-c 1 2 3)) (build-num 6))
-          '((foldl + (|0| ())))))
+          (synthesis 1 (q) '(fun (list int) int) (foldlf 0f) (,(list-c 1 2 3)) (build-num 6))
+          '((foldl add |0|))))
   (test "isort"
         (synthesis 1
                    (q)
                    '(fun (list int) (list int))
-                   (noEmptyf sortHelperf ltf fromHeadf)
+                   (noEmptyf sortHelperf fromHeadf)
                    (,(list-c 3 1 2))
                    (list-v 1 2 3))
         '((fromHead (noEmpty (sortHelper lt)))))
   (test "adds"
         (synthesis 1
                    (q)
-                   '(fun int (list int) (list int))
-                   (mapf flipf composef composef composef composef addf)
+                   '(fun int (fun (list int) (list int)))
+                   (mapf)
                    ((num ,(build-num 5)) ,(list-c 1 2 3))
                    (list-v 6 7 8))
-        '()))
+        '((compose map add)))
+  (let ([0f '(num ())]
+        [1f '(num (1))])
+    (test "length"
+          (synthesis 1 (q) '(fun (list int) int) (foldrf 0f 1f) (,(list-c 1 2 3)) (build-num 3))
+          '((foldr (const (add |1|)) |0|)))))
