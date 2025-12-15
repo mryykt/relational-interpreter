@@ -6,7 +6,7 @@
 
 (defrel (minio exp env val)
         (conde [(numbero exp) (== val exp)]
-               [(symbolo exp) (lookupo exp env val)]
+               [(symbolo exp) (lookup-firsto exp env val)]
                [(caro 'list exp) (== exp val)]
                [(fresh (ca cd ca^ cd^)
                        (== exp `(cons ,ca ,cd))

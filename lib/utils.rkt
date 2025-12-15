@@ -9,7 +9,7 @@
          membero
          rembero
          appendo
-         lookupo
+         lookup-firsto
          mapo
          allo
          inco
@@ -40,7 +40,7 @@
   (conde ((== l '()) (== s out))
          ((fresh (ca cd tl) (conso ca cd l) (conso ca tl out) (appendo cd s tl)))))
 
-(defrel (lookupo x env t)
+(defrel (lookup-firsto x env t)
         (conde ((fresh (y v rest) (== `((,y . ,v) . ,rest) env) (== y x) (== v t)))
                ((fresh (y v rest) (== `((,y . ,v) . ,rest) env) (=/= y x) (lookupo x rest t)))))
 

@@ -26,7 +26,7 @@
            [(true ,_env (v true))]
            [(false ,_env (v false))]
            [(() ,_env (v ()))]
-           [((var ,x) ,env ,v) (symbolo x) (lookupo x env v)]
+           [((var ,x) ,env ,v) (symbolo x) (lookup-firsto x env v)]
            [((lam ,x ,u) ,env (v (closure 0 ,x ,u ,env)))]
            [((fix ,f ,x ,u) ,env (v (closure ,f ,x ,u ,env)))]
            [((app (v (closure ,f ,x ,u ,env^)) (v ,v))

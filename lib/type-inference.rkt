@@ -13,7 +13,7 @@
 (defrel
  (typedo exp env t)
  (matche exp
-         [(var ,x) (symbolo x) (lookupo x env t)]
+         [(var ,x) (symbolo x) (lookup-firsto x env t)]
          [(app ,f ,u) (fresh (a) (typedo f env `(fun ,a ,t)) (typedo u env a))]
          [(lam ,x ,u) (fresh (a b) (typedo u `((,x . ,a) . ,env) b) (== t `(fun ,a ,b)))]
          [(fix ,f ,x ,u)

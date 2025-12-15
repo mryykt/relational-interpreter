@@ -14,7 +14,7 @@
 (defrel (combinator src env t)
         (matche src
                 [(app ,u ,v) (fresh (t0) (combinator u env `(fun ,t0 ,t)) (combinator v env t0))]
-                [(var ,u) (symbolo u) (lookupo u env t)]
+                [(var ,u) (symbolo u) (lookup2o u env t)]
                 [() (fresh (et) (== t `(list ,et)))]))
 
 (defrel (typed-helpero ne nt)
@@ -73,4 +73,12 @@
                    (noEmptyf sortHelperf ltf fromHeadf)
                    (,(list-c 3 1 2))
                    (list-v 1 2 3))
-        '((fromHead (noEmpty (sortHelper lt))))))
+        '((fromHead (noEmpty (sortHelper lt)))))
+  (test "adds"
+        (synthesis 1
+                   (q)
+                   '(fun int (list int) (list int))
+                   (mapf flipf composef composef composef composef addf)
+                   ((num ,(build-num 5)) ,(list-c 1 2 3))
+                   (list-v 6 7 8))
+        '()))

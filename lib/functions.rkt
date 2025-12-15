@@ -94,6 +94,8 @@
 (def-basic-function consf '(lam x (lam y (cons (var x) (var y)))))
 
 (def-basic-function ltf '(lam x (lam y ((var x) < (var y)))))
+
+(def-basic-function addf '(lam x (lam y ((var x) + (var y)))))
 ; basic combinator
 
 (def-basic-function flipf '(lam f (lam x (lam y (app (app (var f) (var y)) (var x))))))

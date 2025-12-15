@@ -20,7 +20,7 @@
  (matche src
          [(app ,u ,v)
           (fresh (t0 env^^) (combinator u env env^^ `(fun ,t0 ,t)) (combinator v env^^ env^ t0))]
-         [(var ,u) (symbolo u) (lookupo u env t) (rembero u env env^)]
+         [(var ,u) (symbolo u) (lookup-firsto u env t) (rembero u env env^)]
          [() (fresh (et) (== t `(list ,et)) (== env env^))]))
 
 (defrel (typed-helpero ne nt)

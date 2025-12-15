@@ -11,7 +11,7 @@
 
 (defrel (eval-expo exp env v)
         (matche exp
-                [(var ,x) (symbolo x) (lookupo x env v)]
+                [(var ,x) (symbolo x) (lookup-firsto x env v)]
                 [(app ,f ,u)
                  (fresh (x t env^ uv g)
                         (eval-expo f env `((,g ,x ,t) . ,env^))
