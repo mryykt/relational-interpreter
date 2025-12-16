@@ -16,30 +16,25 @@
 (define all-list-functions '())
 (define all-advanced-list-functions '())
 
-(define-syntax def-basic-function
+(define-syntax def-function
   (syntax-rules ()
-    [(_ name expr)
+    [(_ functions name expr)
      (begin
        (set! all-functions-list (cons (cons (symbol-trim-last 'name) expr) all-functions-list))
-       (set! all-basic-functions (cons (cons (symbol-trim-last 'name) expr) all-basic-functions))
+       (set! functions (cons (cons (symbol-trim-last 'name) expr) functions))
        (define name expr))]))
+
+(define-syntax def-basic-function
+  (syntax-rules ()
+    [(_ name expr) (def-function all-basic-functions name expr)]))
 
 (define-syntax def-list-function
   (syntax-rules ()
-    [(_ name expr)
-     (begin
-       (set! all-functions-list (cons (cons (symbol-trim-last 'name) expr) all-functions-list))
-       (set! all-list-functions (cons (cons (symbol-trim-last 'name) expr) all-list-functions))
-       (define name expr))]))
+    [(_ name expr) (def-function all-list-functions name expr)]))
 
 (define-syntax def-advanced-list-function
   (syntax-rules ()
-    [(_ name expr)
-     (begin
-       (set! all-functions-list (cons (cons (symbol-trim-last 'name) expr) all-functions-list))
-       (set! all-advanced-list-functions
-             (cons (cons (symbol-trim-last 'name) expr) all-advanced-list-functions))
-       (define name expr))]))
+    [(_ name expr) (def-function all-advanced-list-functions name expr)]))
 
 ; macro
 (define (symbol-trim-last sym)
