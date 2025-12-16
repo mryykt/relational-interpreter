@@ -62,10 +62,9 @@
                    (,(list-c '(1 2) '(3 4)))
                    (list-v 1 2 3 4))
         '((foldl (flip (foldr cons)) ())))
-  (let ([0f '(num ())])
-    (test "sum"
-          (synthesis 1 (q) '(fun (list int) int) (foldlf) (,(list-c 1 2 3)) (build-num 6))
-          '((foldl add 0))))
+  (test "sum"
+        (synthesis 1 (q) '(fun (list int) int) (foldlf) (,(list-c 1 2 3)) (build-num 6))
+        '((foldl add 0)))
   (test "isort"
         (synthesis 1
                    (q)
