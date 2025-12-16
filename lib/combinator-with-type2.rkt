@@ -3,8 +3,8 @@
 (require minikanren)
 (require minikanren/matche)
 (require minikanren/numbers)
-; (require "big-step.rkt")
-(require "small-step.rkt")
+(require "big-step.rkt")
+; (require "small-step.rkt")
 (require "functions.rkt")
 (require "helper.rkt")
 (require "type-inference.rkt")
@@ -51,10 +51,10 @@
   (test "append"
         (synthesis 1
                    (q)
-                   '(fun (list int) (fun (list int) (list int)))
+                   '(fun (list char) (fun (list char) (list char)))
                    (foldrf)
-                   (,(list-c 1 2) ,(list-c 3 4))
-                   (list-v 1 2 3 4))
+                   (,(string-c "hello ") ,(string-c "world"))
+                   (string-v "hello world"))
         '((flip (foldr cons))))
   ;   (test "concat"
   ;         (synthesis 1
@@ -84,15 +84,15 @@
                    (list-v 6 7 8))
         '((compose map add)))
   (test "length"
-        (synthesis 1 (q) '(fun (list int) int) (foldrf) (,(list-c 2 2 2)) (build-num 3))
+        (synthesis 1 (q) '(fun (list char) int) (foldrf) (,(string-c "123")) (build-num 3))
         '((foldr (const (add 1)) 0)))
   (test "rember"
         (synthesis 1
                    (q)
-                   '(fun int (fun (list int) (list int)))
+                   '(fun char (fun (list char) (list char)))
                    (filterf)
-                   ((num ,(build-num 2)) ,(list-c 1 2 3))
-                   (list-v 1 3))
+                   ((char #\o) ,(string-c "hello"))
+                   (string-v "hell"))
         '((compose filter neq)))
   (test "maximize"
         (synthesis 1 (q) '(fun (list int) int) (foldrf) (,(list-c 1 2 3 2 1)) (build-num 3))
