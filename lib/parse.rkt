@@ -50,7 +50,8 @@
     [_
      (cond
        [(symbol? exp) `(var ,exp)]
-       [(number? exp) `(num ,(build-num exp))])]))
+       [(number? exp) `(num ,(build-num exp))]
+       [(char? exp) `(char ,exp)])]))
 
 (define (unbuild-num n)
   (letrec ([f (lambda (x acc w)
@@ -66,6 +67,9 @@
     [(list n x)
      #:when (equal? n 'num)
      (unbuild-num x)]
+    [(list c x)
+     #:when (equal? c 'char)
+     x]
     [(list) '()]
     [(list v x)
      #:when (equal? v 'var)

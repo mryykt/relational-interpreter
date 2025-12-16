@@ -4,25 +4,35 @@
 (require minikanren/numbers)
 (require "test-check.rkt")
 (provide list-c
-         list-v)
+         string-c
+         list-v
+         string-v)
 
 (define (list-c . xs)
   (define (helper ys)
     (if (null? ys)
         '()
         (cond
+          [(char? (car ys)) `(cons (char ,(car ys)) ,(helper (cdr ys)))]
           [(number? (car ys)) `(cons (num ,(build-num (car ys))) ,(helper (cdr ys)))]
           [(list? (car ys)) `(cons ,(helper (car ys)) ,(helper (cdr ys)))])))
   (helper xs))
+
+(define (string-c str)
+  (apply list-c (string->list str)))
 
 (define (list-v . xs)
   (define (helper ys)
     (if (null? ys)
         '()
         (cond
+          [(char? (car ys)) (cons (car ys) (helper (cdr ys)))]
           [(number? (car ys)) (cons (build-num (car ys)) (helper (cdr ys)))]
           [(list? (car ys)) (cons (helper (car ys)) (helper (cdr ys)))])))
   (helper xs))
+
+(define (string-v str)
+  (apply list-v (string->list str)))
 
 (define (run-test)
   (test "list-c-1"

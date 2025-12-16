@@ -20,6 +20,7 @@
                 [(lam ,x ,t) (== v `((0 ,x ,t) . ,env))]
                 [(fix ,f ,x ,t) (eval-expo `(var ,f) `((,f . ((,f ,x ,t) . ,env)) . ,env) v)]
                 [(num ,n) (== v n)]
+                [(char ,c) (== v c)]
                 [true (== v 'true)]
                 [false (== v 'false)]
                 [(,l + ,r) (binary-op l r env pluso v)]

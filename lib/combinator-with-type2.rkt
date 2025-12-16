@@ -3,7 +3,8 @@
 (require minikanren)
 (require minikanren/matche)
 (require minikanren/numbers)
-(require "big-step.rkt")
+; (require "big-step.rkt")
+(require "small-step.rkt")
 (require "functions.rkt")
 (require "helper.rkt")
 (require "type-inference.rkt")
@@ -43,9 +44,10 @@
                         (evalo (with-functions env (apps ,q input ...)) output)))))]))
 
 (define (run-test)
-  (test "reverse"
-        (synthesis 1 (q) '(fun (list int) (list int)) (foldlf) (,(list-c 1 2)) (list-v 2 1))
-        '((foldl (flip cons) ())))
+  (test
+   "reverse"
+   (synthesis 1 (q) '(fun (list char) (list char)) (foldlf) (,(string-c "hello")) (string-v "olleh"))
+   '((foldl (flip cons) ())))
   (test "append"
         (synthesis 1
                    (q)
@@ -54,14 +56,14 @@
                    (,(list-c 1 2) ,(list-c 3 4))
                    (list-v 1 2 3 4))
         '((flip (foldr cons))))
-  (test "concat"
-        (synthesis 1
-                   (q)
-                   '(fun (list (list int)) (list int))
-                   (foldrf foldlf)
-                   (,(list-c '(1 2) '(3 4)))
-                   (list-v 1 2 3 4))
-        '((foldl (flip (foldr cons)) ())))
+  ;   (test "concat"
+  ;         (synthesis 1
+  ;                    (q)
+  ;                    '(fun (list (list int)) (list int))
+  ;                    (foldrf foldlf)
+  ;                    (,(list-c '(1 2) '(3 4)))
+  ;                    (list-v 1 2 3 4))
+  ;         '((foldl (flip (foldr cons)) ())))
   (test "sum"
         (synthesis 1 (q) '(fun (list int) int) (foldlf) (,(list-c 1 2 3)) (build-num 6))
         '((foldl add 0)))

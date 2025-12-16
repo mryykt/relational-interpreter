@@ -23,6 +23,7 @@
 
 (defmatche (stepo _l _e1 _r)
            [((num ,n) ,_env (v ,n))]
+           [((char ,c) ,_env (v ,c))]
            [(true ,_env (v true))]
            [(false ,_env (v false))]
            [(() ,_env (v ()))]

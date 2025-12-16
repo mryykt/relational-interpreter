@@ -19,6 +19,7 @@
          [(fix ,f ,x ,u)
           (fresh (a b) (typedo u `((,f . (fun ,a ,b)) . ((,x . ,a) . ,env)) b) (== t `(fun ,a ,b)))]
          [(num ,n) (== t 'int)]
+         [(char ,_c) (== t 'char)]
          [true (== t 'bool)]
          [false (== t 'bool)]
          [(,u + ,v) (typedo u env 'int) (typedo v env 'int) (== t 'int)]
