@@ -12,9 +12,9 @@
 (require "utils.rkt")
 (require "parse.rkt")
 
-(defrel (combinator src env t)
+(defrel (limitedo src env t)
         (matche src
-                [(app ,u ,v) (fresh (t0) (combinator u env `(fun ,t0 ,t)) (combinator v env t0))]
+                [(app ,u ,v) (fresh (t0) (limitedo u env `(fun ,t0 ,t)) (limitedo v env t0))]
                 [(var ,u) (symbolo u) (lookup2o u env t)]
                 [(num ()) (== t 'int)]
                 [(num (1)) (== t 'int)]
@@ -31,7 +31,7 @@
                (q)
                (fresh (env tenv)
                       (mapo typed-helpero all-functions-list tenv)
-                      (combinator q tenv t)
+                      (limitedo q tenv t)
                       (evalo (with-all-functions (apps ,q input ...)) output))))]
     [(_ n (q) t (function ...) (input ...) output)
      (let ([env (append `((,(symbol-trim-last 'function) . ,function) ...) all-basic-functions)])
@@ -40,7 +40,7 @@
                  (q)
                  (fresh (tenv)
                         (mapo typed-helpero env tenv)
-                        (combinator q tenv t)
+                        (limitedo q tenv t)
                         (evalo (with-functions env (apps ,q input ...)) output)))))]))
 
 (define (run-test)
@@ -56,14 +56,14 @@
                    (,(string-c "hello ") ,(string-c "world"))
                    (string-v "hello world"))
         '((flip (foldr cons))))
-  ;   (test "concat"
-  ;         (synthesis 1
-  ;                    (q)
-  ;                    '(fun (list (list int)) (list int))
-  ;                    (foldrf foldlf)
-  ;                    (,(list-c '(1 2) '(3 4)))
-  ;                    (list-v 1 2 3 4))
-  ;         '((foldl (flip (foldr cons)) ())))
+  (test "concat"
+        (synthesis 1
+                   (q)
+                   '(fun (list (list char)) (list char))
+                   (foldrf foldlf)
+                   (,(list-c "hello" " " "world"))
+                   (string-v "hello world"))
+        '((foldl (flip (foldr cons)) ())))
   (test "sum"
         (synthesis 1 (q) '(fun (list int) int) (foldlf) (,(list-c 1 2 3)) (build-num 6))
         '((foldl add 0)))
@@ -108,3 +108,5 @@
                    (,(string-c "aaabbc"))
                    (string-v "abc"))
         '()))
+
+(run 10 (q a b c) (typedo q '() `(fun (fun ,a (fun ,b ,c)) (fun (fun ,a ,b) (fun ,a ,c)))))
