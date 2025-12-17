@@ -13,6 +13,7 @@
     (if (null? ys)
         '()
         (cond
+          [(string? (car ys)) `(cons ,(string-c (car ys)) ,(helper (cdr ys)))]
           [(char? (car ys)) `(cons (char ,(car ys)) ,(helper (cdr ys)))]
           [(number? (car ys)) `(cons (num ,(build-num (car ys))) ,(helper (cdr ys)))]
           [(list? (car ys)) `(cons ,(helper (car ys)) ,(helper (cdr ys)))])))
