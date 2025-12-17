@@ -130,6 +130,13 @@
                                             (app (app (app (var f) (var g)) (var init))
                                                  (cdr (var xs)))))))))
 
+(def-list-function foldr1f
+                   (parser '(fix f
+                                 (g xs)
+                                 (if ((cdr xs) = ())
+                                     (car xs)
+                                     (g (car xs) (f g (cdr xs)))))))
+
 (def-list-function mapf
                    '(fix f
                          g

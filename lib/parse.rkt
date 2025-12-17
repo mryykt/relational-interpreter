@@ -21,9 +21,11 @@
      (if (pair? xs)
          `(lam ,(car xs) ,(parser `(lambda ,(cdr xs) ,e)))
          (parser e))]
-    [(list l f x e)
+    [(list l f xs e)
      #:when (equal? l 'fix)
-     `(fix ,f ,x ,(parser e))]
+     (if (pair? xs)
+         `(fix ,f ,(car xs) ,(parser `(lambda ,(cdr xs) ,e)))
+         (parser e))]
     [(list l x e1 e2)
      #:when (equal? l 'let)
      `(let ,x
@@ -82,7 +84,10 @@
          `(lambda (,x) ,(unparser e)))]
     [(list l f x e)
      #:when (equal? l 'fix)
-     `(fix ,f ,x ,(unparser e))]
+     (if (and (pair? e) (equal? (car e) 'lam))
+         (match (unparser e)
+           [(list _ xs e) `(fix ,f (,x . ,xs) ,e)])
+         `(fix ,f (,x) ,(unparser e)))]
     [(list l x e1 e2)
      #:when (equal? l 'let)
      `(let ,x

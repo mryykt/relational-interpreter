@@ -95,8 +95,16 @@
                    (string-v "hell"))
         '((compose filter neq)))
   (test "maximize"
-        (synthesis 1 (q) '(fun (list int) int) (foldrf) (,(list-c 1 2 3 2 1)) (build-num 3))
-        '((foldr max 0)))
+        (synthesis 1 (q) '(fun (list int) int) (foldr1f) (,(list-c 1 2 3 2 1)) (build-num 3))
+        '((foldr1 max)))
   (test "minimize"
-        (synthesis 1 (q) '(fun (list int) int) (foldrf) (,(list-c 3 2 5 2 3)) (build-num 2))
-        '((foldr min 0))))
+        (synthesis 1 (q) '(fun (list int) int) (foldr1f) (,(list-c 3 2 5 2 3)) (build-num 2))
+        '((foldr1 min)))
+  (test "uniq"
+        (synthesis 1
+                   (q)
+                   '(fun (list char) (list char))
+                   (foldrf filterf)
+                   (,(string-c "aaabbc"))
+                   (string-v "abc"))
+        '()))
