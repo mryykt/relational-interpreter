@@ -10,6 +10,7 @@
          rembero
          appendo
          lookup-firsto
+         lookup2o
          mapo
          allo
          inco
@@ -42,7 +43,11 @@
 
 (defrel (lookup-firsto x env t)
         (conde ((fresh (y v rest) (== `((,y . ,v) . ,rest) env) (== y x) (== v t)))
-               ((fresh (y v rest) (== `((,y . ,v) . ,rest) env) (=/= y x) (lookupo x rest t)))))
+               ((fresh (y v rest) (== `((,y . ,v) . ,rest) env) (=/= y x) (lookup-firsto x rest t)))))
+
+(defrel
+ (lookup2o x env t)
+ (matche env [((,y . ,v) . ,rest) (== x y) (== t v)] [((,_y . ,_v) . ,rest) (lookup2o x rest t)]))
 
 (defrel (mapo p xs ys)
         (conde [(== xs '()) (== ys '())]
