@@ -109,15 +109,11 @@
 (def-basic-function constf (parser '(lambda (x y) x)))
 ; list functions
 (def-list-function foldlf
-                   '(fix f
-                         g
-                         (lam acc
-                              (lam xs
-                                   (if ((var xs) = ())
-                                       (var acc)
-                                       (app (app (app (var f) (var g))
-                                                 (app (app (var g) (var acc)) (car (var xs))))
-                                            (cdr (var xs))))))))
+                   (parser '(fix f
+                                 (g acc xs)
+                                 (if (xs = ())
+                                     acc
+                                     (f g (g acc (car xs)) (cdr xs))))))
 
 (def-list-function foldrf
                    '(fix f
