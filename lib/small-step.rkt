@@ -5,6 +5,8 @@
 (require "utils.rkt")
 (require "test-check.rkt")
 (require "helper.rkt")
+(require "functions.rkt")
+(require "parse.rkt")
 
 (provide evalo)
 
@@ -28,47 +30,47 @@
            [(false ,_env (v false))]
            [(() ,_env (v ()))]
            [((var ,x) ,env ,v) (symbolo x) (lookup-firsto x env v)]
-           [((lam ,x ,u) ,env (v (closure 0 ,x ,u ,env)))]
-           [((fix ,f ,x ,u) ,env (v (closure ,f ,x ,u ,env)))]
-           [((app (v (closure ,f ,x ,u ,env^)) (v ,v))
+           [((lam ,x ,e) ,env (v (closure 0 ,x ,e ,env)))]
+           [((fix ,f ,x ,e) ,env (v (closure ,f ,x ,e ,env)))]
+           [((app (v (closure ,f ,x ,e ,env^)) (v ,v))
              ,_env
-             (scope ,u ((,f . (v (closure ,f ,x ,u ,env^))) . ((,x . (v ,v)) . ,env^))))]
-           [((app ,u ,v) ,env (app ,u^ ,v)) (stepo u env u^)]
-           [((app (v ,u) ,v) ,env (app (v ,u) ,v^)) (stepo v env v^)]
+             (scope ,e ((,f . (v (closure ,f ,x ,e ,env^))) . ((,x . (v ,v)) . ,env^))))]
+           [((app ,e1 ,e2) ,env (app ,u^ ,e2)) (stepo e1 env u^)]
+           [((app (v ,v) ,e) ,env (app (v ,v) ,v^)) (stepo e env v^)]
            [((let ,x
-               (v ,u)
-               ,v)
+               (v ,v)
+               ,e)
              ,env
-             (scope ,v ((,x . (v ,u)) . ,env)))]
+             (scope ,e ((,x . (v ,v)) . ,env)))]
            [((let ,x
-               ,u
-               ,v)
+               ,e1
+               ,e2)
              ,env
              (let ,x
-               ,u^
-               ,v))
-            (stepo u env u^)]
-           [((if (v true) ,u ,_v) ,_env ,u)]
-           [((if (v false) ,_u ,v) ,_env ,v)]
-           [((if ,c ,u ,v) ,env (if ,c^ ,u ,v)) (stepo c env c^)]
-           [(((v ,u) + (v ,v)) ,_env (v ,w)) (pluso u v w)]
-           [(((v ,u) - (v ,v)) ,_env (v ,w)) (minuso u v w)]
-           [(((v ,u) * (v ,v)) ,_env (v ,w)) (*o u v w)]
-           [(((v ,u) = (v ,v)) ,_env (v true)) (== u v)]
-           [(((v ,u) = (v ,v)) ,_env (v false)) (=/= u v)]
-           [(((v ,u) < (v ,v)) ,_env (v true)) (<o u v)]
-           [(((v ,u) < (v ,v)) ,_env (v false)) (conde [(<o v u)] [(== u v)])]
-           [((,u ,op ,v) ,env (,u^ ,op ,v)) (membero op '(+ - * = <)) (stepo u env u^)]
-           [(((v ,u) ,op ,v) ,env ((v ,u) ,op ,v^)) (membero op '(+ - * = <)) (stepo v env v^)]
-           [((cons (v ,a) (v ,d)) ,_env (v (,a . ,d)))]
-           [((cons ,a ,d) ,env (cons ,a^ ,d)) (stepo a env a^)]
-           [((cons (v ,a) ,d) ,env (cons (v ,a) ,d^)) (stepo d env d^)]
-           [((car (v (,a . ,_d))) ,_env (v ,a))]
-           [((car ,c) ,env (car ,c^)) (stepo c env c^)]
-           [((cdr (v (,_a . ,d))) ,_env (v ,d))]
-           [((cdr ,c) ,env (cdr ,c^)) (stepo c env c^)]
+               ,e1^
+               ,e2))
+            (stepo e1 env e1^)]
+           [((if (v true) ,e1 ,_e2) ,_env ,e1)]
+           [((if (v false) ,_e1 ,e2) ,_env ,e2)]
+           [((if ,e1 ,e2 ,e3) ,env (if ,e1^ ,e2 ,e3)) (stepo e1 env e1^)]
+           [(((v ,v1) + (v ,v2)) ,_env (v ,v)) (pluso v1 v2 v)]
+           [(((v ,v1) - (v ,v2)) ,_env (v ,v)) (minuso v1 v2 v)]
+           [(((v ,v1) * (v ,v2)) ,_env (v ,v)) (*o v1 v2 v)]
+           [(((v ,v1) = (v ,v2)) ,_env (v true)) (== v1 v2)]
+           [(((v ,v1) = (v ,v2)) ,_env (v false)) (=/= v1 v2)]
+           [(((v ,v1) < (v ,v2)) ,_env (v true)) (<o v1 v2)]
+           [(((v ,v1) < (v ,v2)) ,_env (v false)) (conde [(<o v2 v1)] [(== v1 v2)])]
+           [((,e1 ,op ,e2) ,env (,e1^ ,op ,e2)) (membero op '(+ - * = <)) (stepo e1 env e1^)]
+           [(((v ,v) ,op ,e) ,env ((v ,v) ,op ,e^)) (membero op '(+ - * = <)) (stepo e env e^)]
+           [((cons (v ,v1) (v ,v2)) ,_env (v (,v1 . ,v2)))]
+           [((cons ,e1 ,e2) ,env (cons ,e1^ ,e2)) (stepo e1 env e1^)]
+           [((cons (v ,v) ,e) ,env (cons (v ,v) ,e^)) (stepo e env e^)]
+           [((car (v (,v1 . ,_v2))) ,_env (v ,v1))]
+           [((car ,e) ,env (car ,e^)) (stepo e env e^)]
+           [((cdr (v (,_v1 . ,v2))) ,_env (v ,v2))]
+           [((cdr ,e) ,env (cdr ,e^)) (stepo e env e^)]
            [((scope (v ,v) ,_env^) ,_env (v ,v))]
-           [((scope ,u ,env^) ,_env (scope ,u^ ,env^)) (stepo u env^ u^)])
+           [((scope ,e ,env^) ,_env (scope ,e^ ,env^)) (stepo e env^ e^)])
 
 (define (run-test)
   (test "test-fun" (run 1 (q) (evalo `(app (lam x (var x)) (num ,(build-num 1))) q)) '((1)))
