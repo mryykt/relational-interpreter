@@ -45,6 +45,9 @@
                         (evalo (with-functions env (apps ,q input ...)) output)))))]))
 
 (define (run-test)
+  (test "last"
+        (synthesis 1 '(fun (list char) char) (foldr1f) (,(string-c "hello")) '(char #\o))
+        '(foldr1 (flip const)))
   (test
    "reverse"
    (synthesis 1 '(fun (list char) (list char)) (foldlEmptyf) (,(string-c "hello")) (string-v "olleh"))
