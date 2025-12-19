@@ -66,9 +66,7 @@
          ,(with-functions (cdr ls) c))))
 
 (define (with-all-functions c)
-  (with-functions
-   `((foldl . ,foldlf) (flip . ,flipf) (cons . ,consf) (concat . ,concatf) (append . ,appendf))
-   c))
+  (with-functions all-functions-list c))
 
 ; basic function
 (def-basic-function orf
