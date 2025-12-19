@@ -11,11 +11,12 @@
 (require "test-check.rkt")
 (require "utils.rkt")
 (require "parse.rkt")
+(require "combinator.rkt")
 
 (defrel (limitedo src env t)
         (matche src
                 [(app ,u ,v) (fresh (t0) (limitedo u env `(fun ,t0 ,t)) (limitedo v env t0))]
-                [(var ,u) (symbolo u) (lookup2o u env t)]
+                [(var ,u) (symbolo u) (lookup-firsto u env t)]
                 [(num ()) (== t 'int)]
                 [(num (1)) (== t 'int)]
                 [() (fresh (et) (== t `(list ,et)))]))
@@ -44,10 +45,14 @@
                         (evalo (with-functions env (apps ,q input ...)) output)))))]))
 
 (define (run-test)
-  (test
-   "reverse"
-   (synthesis 1 (q) '(fun (list char) (list char)) (foldlf) (,(string-c "hello")) (string-v "olleh"))
-   '((foldl (flip cons) ())))
+  (test "reverse"
+        (synthesis 1
+                   (q)
+                   '(fun (list char) (list char))
+                   (foldlEmptyf)
+                   (,(string-c "hello"))
+                   (string-v "olleh"))
+        '((foldlEmpty (flip cons))))
   (test "append"
         (synthesis 1
                    (q)
@@ -60,10 +65,10 @@
         (synthesis 1
                    (q)
                    '(fun (list (list char)) (list char))
-                   (foldrf foldlf)
+                   (foldrf foldrEmptyf)
                    (,(list-c "hello" " " "world"))
                    (string-v "hello world"))
-        '((foldl (flip (foldr cons)) ())))
+        '((foldrEmpty (flip (foldr cons)))))
   (test "sum"
         (synthesis 1 (q) '(fun (list int) int) (foldlf) (,(list-c 1 2 3)) (build-num 6))
         '((foldl add 0)))
@@ -71,10 +76,10 @@
         (synthesis 1
                    (q)
                    '(fun (list int) (list int))
-                   (noEmptyf sortHelperf fromHeadf)
+                   (noEmptyf sortHelperf foldrEmptyf)
                    (,(list-c 3 1 2))
                    (list-v 1 2 3))
-        '((fromHead (noEmpty (sortHelper lt)))))
+        '((foldrEmpty (noEmpty (sortHelper lt)))))
   (test "adds"
         (synthesis 1
                    (q)
@@ -84,8 +89,8 @@
                    (list-v 6 7 8))
         '((compose map add)))
   (test "length"
-        (synthesis 1 (q) '(fun (list char) int) (foldrf) (,(string-c "123")) (build-num 3))
-        '((foldr (const (add 1)) 0)))
+        (synthesis 1 (q) '(fun (list char) int) (foldr0f) (,(string-c "123")) (build-num 3))
+        '((foldr0 (const (add 1)))))
   (test "rember"
         (synthesis 1
                    (q)
@@ -104,9 +109,7 @@
         (synthesis 1
                    (q)
                    '(fun (list char) (list char))
-                   (foldrf filterf)
+                   (foldrEmptyf filterf)
                    (,(string-c "aaabbc"))
                    (string-v "abc"))
         '()))
-
-(run 10 (q a b c) (typedo q '() `(fun (fun ,a (fun ,b ,c)) (fun (fun ,a ,b) (fun ,a ,c)))))

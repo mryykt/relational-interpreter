@@ -104,6 +104,8 @@
 
 (def-basic-function composef '(lam f (lam g (lam x (app (var f) (app (var g) (var x)))))))
 
+(def-basic-function forkf (parser '(lambda (f g x y) (f x (g x y)))))
+
 (def-basic-function constf (parser '(lambda (x y) x)))
 ; list functions
 (def-list-function foldlf
@@ -207,14 +209,17 @@
                                    (app (var concat)
                                         ,(apps (var map) (app (var f) (var g)) (var temp))))))))))
 
-(def-advanced-list-function
- fromHeadf
- `(fix f
-       g
-       (lam xs
-            (if ((var xs) = ())
-                ()
-                ,(apps (var g) (car (var xs)) ,(apps (var f) (var g) (cdr (var xs))))))))
+; foldl g []
+
+(def-advanced-list-function foldrEmptyf
+                            (make-program foldrf ,(parser '(lambda (g xs) (foldr g () xs)))))
+
+(def-advanced-list-function foldlEmptyf
+                            (make-program foldlf ,(parser '(lambda (g xs) (foldl g () xs)))))
+
+(def-advanced-list-function foldr0f (make-program foldrf ,(parser '(lambda (g xs) (foldr g 0 xs)))))
+
+(def-advanced-list-function foldl0f (make-program foldlf ,(parser '(lambda (g xs) (foldl g 0 xs)))))
 
 (def-advanced-list-function
  noEmptyf
@@ -325,22 +330,22 @@
                             ,(list-c 3 1 2 6 7 4 5)))
                     q))
         `(,(list-v 1 2 3 4 5 6 7)))
-  (test "fromHead"
+  (test "foldrEmpty"
         (run 1
              (q)
              (evalo (make-program
-                     fromHeadf
-                     ,(apps (var fromHead) (lam x (lam y (cons (var x) (var y)))) ,(list-c 1 2)))
+                     foldrEmptyf
+                     ,(apps (var foldrEmpty) (lam x (lam y (cons (var x) (var y)))) ,(list-c 1 2)))
                     q))
         `(,(list-v 1 2)))
   (test "insert_sort"
         (run 1
              (q)
-             (evalo (make-program fromHeadf
+             (evalo (make-program foldrEmptyf
                                   noEmptyf
                                   sortHelperf
                                   ltf
-                                  ,(apps (var fromHead)
+                                  ,(apps (var foldrEmpty)
                                          (app (var noEmpty) (app (var sortHelper) (var lt)))
                                          ,(list-c 3 1 2 6 7 4 5)))
                     q))
