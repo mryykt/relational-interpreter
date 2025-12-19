@@ -26,7 +26,7 @@
 
 (define-syntax synthesis
   (syntax-rules ()
-    [(_ n (q) t (input ...) output)
+    [(_ n t (input ...) output)
      (map unparser
           (run n
                (q)
@@ -34,7 +34,7 @@
                       (mapo typed-helpero all-functions-list tenv)
                       (limitedo q tenv t)
                       (evalo (with-all-functions (apps ,q input ...)) output))))]
-    [(_ n (q) t (function ...) (input ...) output)
+    [(_ n t (function ...) (input ...) output)
      (let ([env (append `((,(symbol-trim-last 'function) . ,function) ...) all-basic-functions)])
        (map unparser
             (run n
@@ -45,17 +45,12 @@
                         (evalo (with-functions env (apps ,q input ...)) output)))))]))
 
 (define (run-test)
-  (test "reverse"
-        (synthesis 1
-                   (q)
-                   '(fun (list char) (list char))
-                   (foldlEmptyf)
-                   (,(string-c "hello"))
-                   (string-v "olleh"))
-        '((foldlEmpty (flip cons))))
+  (test
+   "reverse"
+   (synthesis 1 '(fun (list char) (list char)) (foldlEmptyf) (,(string-c "hello")) (string-v "olleh"))
+   '((foldlEmpty (flip cons))))
   (test "append"
         (synthesis 1
-                   (q)
                    '(fun (list char) (fun (list char) (list char)))
                    (foldrf)
                    (,(string-c "hello ") ,(string-c "world"))
@@ -63,18 +58,16 @@
         '((flip (foldr cons))))
   (test "concat"
         (synthesis 1
-                   (q)
                    '(fun (list (list char)) (list char))
                    (foldrf foldrEmptyf)
                    (,(list-c "hello" " " "world"))
                    (string-v "hello world"))
         '((foldrEmpty (flip (foldr cons)))))
   (test "sum"
-        (synthesis 1 (q) '(fun (list int) int) (foldlf) (,(list-c 1 2 3)) (build-num 6))
+        (synthesis 1 '(fun (list int) int) (foldlf) (,(list-c 1 2 3)) (build-num 6))
         '((foldl add 0)))
   (test "isort"
         (synthesis 1
-                   (q)
                    '(fun (list int) (list int))
                    (noEmptyf sortHelperf foldrEmptyf)
                    (,(list-c 3 1 2))
@@ -82,32 +75,29 @@
         '((foldrEmpty (noEmpty (sortHelper lt)))))
   (test "adds"
         (synthesis 1
-                   (q)
                    '(fun int (fun (list int) (list int)))
                    (mapf)
                    ((num ,(build-num 5)) ,(list-c 1 2 3))
                    (list-v 6 7 8))
         '((compose map add)))
   (test "length"
-        (synthesis 1 (q) '(fun (list char) int) (foldr0f) (,(string-c "123")) (build-num 3))
+        (synthesis 1 '(fun (list char) int) (foldr0f) (,(string-c "123")) (build-num 3))
         '((foldr0 (const (add 1)))))
   (test "rember"
         (synthesis 1
-                   (q)
                    '(fun char (fun (list char) (list char)))
                    (filterf)
                    ((char #\o) ,(string-c "hello"))
                    (string-v "hell"))
         '((compose filter neq)))
   (test "maximize"
-        (synthesis 1 (q) '(fun (list int) int) (foldr1f) (,(list-c 1 2 3 2 1)) (build-num 3))
+        (synthesis 1 '(fun (list int) int) (foldr1f) (,(list-c 1 2 3 2 1)) (build-num 3))
         '((foldr1 max)))
   (test "minimize"
-        (synthesis 1 (q) '(fun (list int) int) (foldr1f) (,(list-c 3 2 5 2 3)) (build-num 2))
+        (synthesis 1 '(fun (list int) int) (foldr1f) (,(list-c 3 2 5 2 3)) (build-num 2))
         '((foldr1 min)))
   (test "uniq"
         (synthesis 1
-                   (q)
                    '(fun (list char) (list char))
                    (foldrEmptyf filterf)
                    (,(string-c "aaabbc"))
