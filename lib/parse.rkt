@@ -16,38 +16,28 @@
     [#t 'true]
     [#f 'false]
     [(list) '()]
-    [(list l xs e)
-     #:when (equal? l 'lambda)
+    [(list 'lambda xs e)
      (if (pair? xs)
          `(lam ,(car xs) ,(parser `(lambda ,(cdr xs) ,e)))
          (parser e))]
-    [(list l f xs e)
-     #:when (equal? l 'fix)
+    [(list 'fix f xs e)
      (if (pair? xs)
          `(fix ,f ,(car xs) ,(parser `(lambda ,(cdr xs) ,e)))
          (parser e))]
-    [(list l x e1 e2)
-     #:when (equal? l 'let)
+    [(list 'let x e1 e2)
      `(let ,x
         ,(parser e1)
         ,(parser e2))]
-    [(list i e1 e2 e3)
-     #:when (equal? i 'if)
+    [(list 'if e1 e2 e3)
      `(if ,(parser e1)
           ,(parser e2)
           ,(parser e3))]
     [(list e1 op e2)
      #:when (member op '(= < + - * /))
      `(,(parser e1) ,op ,(parser e2))]
-    [(list c a d)
-     #:when (equal? c 'cons)
-     `(cons ,(parser a) ,(parser d))]
-    [(list c l)
-     #:when (equal? c 'car)
-     `(car ,(parser l))]
-    [(list c l)
-     #:when (equal? c 'cdr)
-     `(cdr ,(parser l))]
+    [(list 'cons a d) `(cons ,(parser a) ,(parser d))]
+    [(list 'car l) `(car ,(parser l))]
+    [(list 'cdr l) `(cdr ,(parser l))]
     [(list e ...) (app (map parser e))]
     [_
      (cond
@@ -66,55 +56,38 @@
   (match exp
     ['true #t]
     ['false #f]
-    [(list n x)
-     #:when (equal? n 'num)
-     (unbuild-num x)]
-    [(list c x)
-     #:when (equal? c 'char)
-     x]
+    [(list 'num x) (unbuild-num x)]
+    [(list 'char x) x]
     [(list) '()]
-    [(list v x)
-     #:when (equal? v 'var)
-     x]
-    [(list l x e)
-     #:when (equal? l 'lam)
+    [(list 'var x) x]
+    [(list 'lam x e)
      (if (and (pair? e) (equal? (car e) 'lam))
          (match (unparser e)
            [(list _ xs e) `(lambda (,x . ,xs) ,e)])
          `(lambda (,x) ,(unparser e)))]
-    [(list l f x e)
-     #:when (equal? l 'fix)
+    [(list 'fix f x e)
      (if (and (pair? e) (equal? (car e) 'lam))
          (match (unparser e)
            [(list _ xs e) `(fix ,f (,x . ,xs) ,e)])
          `(fix ,f (,x) ,(unparser e)))]
-    [(list l x e1 e2)
-     #:when (equal? l 'let)
+    [(list 'let x e1 e2)
      `(let ,x
         ,(unparser e1)
         ,(unparser e2))]
-    [(list i e1 e2 e3)
-     #:when (equal? i 'if)
+    [(list 'if e1 e2 e3)
      `(if ,(unparser e1)
           ,(unparser e2)
           ,(unparser e3))]
-    [(list a u v)
-     #:when (equal? a 'app)
+    [(list 'app u v)
      (if (and (pair? u) (equal? (car u) 'app))
          (append (unparser u) `(,(unparser v)))
          `(,(unparser u) ,(unparser v)))]
     [(list e1 op e2)
      #:when (member op '(= < + - * /))
      `(,(unparser e1) ,op ,(unparser e2))]
-    [(list c a d)
-     #:when (equal? c 'cons)
-     `(cons ,(unparser a) ,(unparser d))]
-    [(list c l)
-     #:when (equal? c 'car)
-     `(car ,(unparser l))]
-    [(list c l)
-     #:when (equal? c 'cdr)
-     `(cdr ,(unparser l))]))
+    [(list 'cons a d) `(cons ,(unparser a) ,(unparser d))]
+    [(list 'car l) `(car ,(unparser l))]
+    [(list 'cdr l) `(cdr ,(unparser l))]))
 
 (define (check exp)
   (let ([f (lambda (e)
