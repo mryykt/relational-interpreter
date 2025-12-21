@@ -19,7 +19,7 @@
  (combinator src env env^ t)
  (matche src
          [(app ,u ,v)
-          (fresh (t0 env^^) (combinator u env env^^ `(fun ,t0 ,t)) (combinator v env^^ env^ t0))]
+          (fresh (t0 env^^) (combinator u env env^^ `(,t0 -> ,t)) (combinator v env^^ env^ t0))]
          [(var ,u) (symbolo u) (lookup-firsto u env t) (rembero u env env^)]
          [(num ()) (== t 'int)]
          [(num (1)) (== t 'int)]
@@ -50,12 +50,12 @@
 
 (define (run-test)
   (test "reverse"
-        (synthesis 1 (q) '(fun (list int) (list int)) (foldlf) (,(list-c 1 2)) (list-v 2 1))
+        (synthesis 1 (q) '((list int) -> (list int)) (foldlf) (,(list-c 1 2)) (list-v 2 1))
         '((foldl (flip cons) ())))
   (test "append"
         (synthesis 1
                    (q)
-                   '(fun (list int) (fun (list int) (list int)))
+                   '((list int) -> ((list int) -> (list int)))
                    (foldrf)
                    (,(list-c 1 2) ,(list-c 3 4))
                    (list-v 1 2 3 4))
@@ -69,38 +69,38 @@
   ;                    (list-v 1 2 3 4))
   ;         '((foldl (flip (foldr cons)) ())))
   (test "sum"
-        (synthesis 1 (q) '(fun (list int) int) (foldlf) (,(list-c 1 2 3)) (build-num 6))
+        (synthesis 1 (q) '((list int) -> int) (foldlf) (,(list-c 1 2 3)) (build-num 6))
         '((foldl add 0)))
   (test "isort"
         (synthesis 1
                    (q)
-                   '(fun (list int) (list int))
-                   (noEmptyf sortHelperf fromHeadf)
+                   '((list int) -> (list int))
+                   (noEmptyf sortHelperf foldrEmptyf)
                    (,(list-c 3 1 2))
                    (list-v 1 2 3))
-        '((fromHead (noEmpty (sortHelper lt)))))
+        '((foldrEmpty (noEmpty (sortHelper lt)))))
   (test "adds"
         (synthesis 1
                    (q)
-                   '(fun int (fun (list int) (list int)))
+                   '(int -> ((list int) -> (list int)))
                    (mapf)
                    ((num ,(build-num 5)) ,(list-c 1 2 3))
                    (list-v 6 7 8))
         '((compose map add)))
   (test "length"
-        (synthesis 1 (q) '(fun (list int) int) (foldrf) (,(list-c 2 2 2)) (build-num 3))
+        (synthesis 1 (q) '((list int) -> int) (foldrf) (,(list-c 2 2 2)) (build-num 3))
         '((foldr (const (add 1)) 0)))
   (test "rember"
         (synthesis 1
                    (q)
-                   '(fun int (fun (list int) (list int)))
+                   '(int -> ((list int) -> (list int)))
                    (filterf)
                    ((num ,(build-num 2)) ,(list-c 1 2 3))
                    (list-v 1 3))
         '((compose filter neq)))
   (test "maximize"
-        (synthesis 1 (q) '(fun (list int) int) (foldrf) (,(list-c 1 2 3 2 1)) (build-num 3))
+        (synthesis 1 (q) '((list int) -> int) (foldrf) (,(list-c 1 2 3 2 1)) (build-num 3))
         '((foldr max 0)))
   (test "minimize"
-        (synthesis 1 (q) '(fun (list int) int) (foldrf) (,(list-c 3 2 5 2 3)) (build-num 2))
+        (synthesis 1 (q) '((list int) -> int) (foldrf) (,(list-c 3 2 5 2 3)) (build-num 2))
         '((foldr min 0))))

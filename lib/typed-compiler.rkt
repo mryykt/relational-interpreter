@@ -16,7 +16,7 @@
   [(var ,x) (fresh (n) (symbolo x) (ntho n env `(,x . ,t)) (== vm `((search ,n))))]
   [(app ,f ,u)
    (fresh (a cf cu tl tl2)
-          (typed-compileo f env `(fun ,a ,t) cf)
+          (typed-compileo f env `(,a -> ,t) cf)
           (typed-compileo u env a cu)
           (== vm `(pushenv . ,tl))
           (appendo cu tl2 tl)
@@ -26,13 +26,13 @@
           (typed-compileo u env^ b cu)
           (appendo env `((0 . none) (,x . ,a)) env^)
           (== vm `((mkclos ,cu)))
-          (== t `(fun ,a ,b)))]
+          (== t `(,a -> ,b)))]
   [(fix ,f ,x ,u)
    (fresh (a b cu env^)
           (typed-compileo u env^ b cu)
           (appendo env `((,f . ,t) (,x . ,a)) env^)
           (== vm `((mkclos ,cu)))
-          (== t `(fun ,a ,b)))]
+          (== t `(,a -> ,b)))]
   [(num ,n) (== t 'int) (== vm `((ldi ,n)))]
   [(+ ,u ,v) (binary-opo u v env 'add 'int 'int vm) (== t 'int)]
   [(- ,u ,v) (binary-opo u v env 'sub 'int 'int vm) (== t 'int)]

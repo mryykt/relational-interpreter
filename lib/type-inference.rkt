@@ -14,10 +14,10 @@
  (typedo exp env t)
  (matche exp
          [(var ,x) (symbolo x) (lookup-firsto x env t)]
-         [(app ,e1 ,e2) (fresh (a) (typedo e1 env `(fun ,a ,t)) (typedo e2 env a))]
-         [(lam ,x ,e) (fresh (a b) (typedo e `((,x . ,a) . ,env) b) (== t `(fun ,a ,b)))]
+         [(app ,e1 ,e2) (fresh (a) (typedo e1 env `(,a -> ,t)) (typedo e2 env a))]
+         [(lam ,x ,e) (fresh (a b) (typedo e `((,x . ,a) . ,env) b) (== t `(,a -> ,b)))]
          [(fix ,f ,x ,e)
-          (fresh (a b) (typedo e `((,f . (fun ,a ,b)) . ((,x . ,a) . ,env)) b) (== t `(fun ,a ,b)))]
+          (fresh (a b) (typedo e `((,f . (,a -> ,b)) . ((,x . ,a) . ,env)) b) (== t `(,a -> ,b)))]
          [(num ,_n) (== t 'int)]
          [(char ,_c) (== t 'char)]
          [true (== t 'bool)]
