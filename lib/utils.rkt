@@ -3,7 +3,8 @@
 (require minikanren/numbers)
 (require minikanren/matche)
 
-(provide conso
+(provide debug-trace
+         conso
          caro
          cdro
          membero
@@ -16,6 +17,16 @@
          inco
          deco
          ntho)
+
+(define-syntax debug-trace
+  (syntax-rules ()
+    [(_ str a ...)
+     (project (a ...)
+              (begin
+                (display str)
+                (display (format " ~a" a)) ...
+                (display "\n")
+                (== #t #t)))]))
 
 (define (conso ca cd ls)
   (== `(,ca . ,cd) ls))
