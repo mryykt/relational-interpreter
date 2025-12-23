@@ -43,6 +43,7 @@
                         (mapo typed-helpero env tenv)
                         (limitedo q tenv t)
                         (evalo (with-functions env (apps ,q input ...)) o)
+                        (debug-trace "1" q o)
                         (== o output)))))]))
 
 (define (run-test)
@@ -103,7 +104,7 @@
                    (foldrEmptyf filterf)
                    (,(string-c "aaabbc"))
                    (string-v "abc"))
-        '())
+        '((foldrEmpty (fork cons (compose filter neq)))))
   (test "last"
         (synthesis 1 '((list char) -> char) (foldr1f) (,(string-c "hello")) '(char #\o))
         '(foldr1 (flip const))))
