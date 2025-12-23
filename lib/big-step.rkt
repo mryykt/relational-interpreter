@@ -11,40 +11,40 @@
 
 (defrel (eval-expo exp env v)
         (matche exp
+                [(num ,n) (== v n)]
+                [(char ,c) (== v c)]
+                [true (== v 'true)]
+                [false (== v 'false)]
+                [() (== v '())]
                 [(var ,x) (symbolo x) (lookup-firsto x env v)]
+                [(lam ,x ,e) (== v `((0 ,x ,e) . ,env))]
+                [(fix ,f ,x ,e) (eval-expo `(var ,f) `((,f . ((,f ,x ,e) . ,env)) . ,env) v)]
                 [(app ,e1 ,e2)
                  (fresh (f x t env^ v^)
                         (eval-expo e1 env `((,f ,x ,t) . ,env^))
                         (eval-expo e2 env v^)
                         (eval-expo t `((,f . ((,f ,x ,t) . ,env^)) (,x . ,v^) . ,env^) v))]
-                [(lam ,x ,e) (== v `((0 ,x ,e) . ,env))]
-                [(fix ,f ,x ,e) (eval-expo `(var ,f) `((,f . ((,f ,x ,e) . ,env)) . ,env) v)]
-                [(num ,n) (== v n)]
-                [(char ,c) (== v c)]
-                [true (== v 'true)]
-                [false (== v 'false)]
-                [(,e1 + ,e2) (binary-op e1 e2 env pluso v)]
-                [(,e1 - ,e2) (binary-op e1 e2 env minuso v)]
-                [(,e1 * ,e2) (binary-op e1 e2 env *o v)]
+                [(let ,x
+                   ,e1
+                   ,e2)
+                 (fresh (v^ env^) (eval-expo e1 env v^) (eval-expo e2 `((,x . ,v^) . ,env) v))]
+                [(if ,e1 ,e2 ,e3)
+                 (fresh (tv)
+                        (eval-expo e1 env tv)
+                        (conde [(== tv 'true) (eval-expo e2 env v)]
+                               [(== tv 'false) (eval-expo e3 env v)]))]
                 [(,e1 = ,e2) (binary-op e1 e2 env eqo v)]
                 [(,e1 < ,e2)
                  (fresh (v1 v2)
                         (eval-expo e1 env v1)
                         (eval-expo e2 env v2)
                         (conde [(<o v1 v2) (== v 'true)] [(<=o v2 v1) (== v 'false)]))]
-                [() (== v '())]
+                [(,e1 + ,e2) (binary-op e1 e2 env pluso v)]
+                [(,e1 - ,e2) (binary-op e1 e2 env minuso v)]
+                [(,e1 * ,e2) (binary-op e1 e2 env *o v)]
                 [(cons ,e1 ,e2) (binary-op e1 e2 env conso v)]
                 [(car ,e) (fresh (lsv) (eval-expo e env lsv) (caro v lsv))]
-                [(cdr ,e) (fresh (lsv) (eval-expo e env lsv) (cdro v lsv))]
-                [(if ,e1 ,e2 ,e3)
-                 (fresh (tv)
-                        (eval-expo e1 env tv)
-                        (conde [(== tv 'true) (eval-expo e2 env v)]
-                               [(== tv 'false) (eval-expo e3 env v)]))]
-                [(let ,x
-                   ,e1
-                   ,e2)
-                 (fresh (v^ env^) (eval-expo e1 env v^) (eval-expo e2 `((,x . ,v^) . ,env) v))]))
+                [(cdr ,e) (fresh (lsv) (eval-expo e env lsv) (cdro v lsv))]))
 
 (defrel (eqo l r v) (conde [(== l r) (== v 'true)] [(=/= l r) (== v 'false)]))
 
