@@ -29,7 +29,9 @@
            [((cdr ,e) ,env ,t)])
 
 ; env⊢t
-(defrel (well-formed-typeo t env) (== 1 1))
+(defmatche (well-formed-typeo _t _env)
+           [((,x ,b ,exp) ,env) (simply-typedo exp `((,x . ,b) . ,env) 'bool)]
+           [((,x ,s -> ,t) ,env) (well-formed-typeo s env) (well-formed-typeo t `((,x . ,s) . ,env))])
 
 ; env⊢s<:t
 (defrel (subtypingo t s env) (== 1 1))
@@ -39,3 +41,6 @@
 
 ; ⊢s:env
 (defrel (closing-substitutiono s env) (== 1 1))
+
+; 制約式の単純型付け
+(defrel (simply-typedo exp env t) (== 1 1))
