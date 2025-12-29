@@ -38,6 +38,7 @@
     [(list 'cons a d) `(cons ,(parser a) ,(parser d))]
     [(list 'car l) `(car ,(parser l))]
     [(list 'cdr l) `(cdr ,(parser l))]
+    [(list 'list e ...) (foldl (lambda (x acc) `(cons ,x ,acc)) '() (map parser e))]
     [(list e ...) (app (map parser e))]
     [_
      (cond
