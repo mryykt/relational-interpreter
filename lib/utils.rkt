@@ -52,9 +52,10 @@
   (conde ((== l '()) (== s out))
          ((fresh (ca cd tl) (conso ca cd l) (conso ca tl out) (appendo cd s tl)))))
 
-(defrel (lookup-firsto x env t)
-        (conde ((fresh (y v rest) (== `((,y . ,v) . ,rest) env) (== y x) (== v t)))
-               ((fresh (y v rest) (== `((,y . ,v) . ,rest) env) (=/= y x) (lookup-firsto x rest t)))))
+(defrel (lookup-firsto x env v)
+        (fresh (y rest)
+               (conde ((== `((,x . ,v) . ,rest) env))
+                      ((== `((,y . ,v) . ,rest) env) (=/= y x) (lookup-firsto x rest v)))))
 
 (defrel
  (lookup2o x env t)
