@@ -4,6 +4,7 @@
 (require minikanren/matche)
 (require "utils.rkt")
 (require "test-check.rkt")
+(require (prefix-in c: "constraint.rkt"))
 
 ; env⊢exp:t
 (defmatche
@@ -49,7 +50,7 @@
 
 ; env⊢t
 (defmatche (well-formed-typeo _t _env)
-           [((,x ,b ,exp) ,env) (simply-typedo exp `((,x . ,b) . ,env) 'bool)]
+           [((,x ,b ,exp) ,env) (c:typedo exp `((,x . ,b) . ,env) 'bool)]
            [((list ,t) ,env) (well-formed-typeo t env)]
            [((,x ,s -> ,t) ,env) (well-formed-typeo s env) (well-formed-typeo t `((,x . ,s) . ,env))])
 
@@ -59,13 +60,4 @@
             (subtypingo t1 s1 env)
             (subtypingo t2 s2 `((,x . ,t1) . ,env))]
            [((list ,t) (list ,s) ,env) (subtypingo t s env)]
-           [((,x ,b ,e1) (,x ,b ,e2) ,env) (impo e1 e2 `((,x . ,b) . ,env))])
-
-; env⊢ s=>t
-(defrel (impo s t env) (== t s))
-
-; ⊢s:env
-(defrel (closing-substitutiono s env) (== 1 1))
-
-; 制約式の単純型付け
-(defrel (simply-typedo exp env t) (== t 'bool))
+           [((,x ,b ,e1) (,x ,b ,e2) ,env) (c:impo e1 e2 `((,x . ,b) . ,env))])
