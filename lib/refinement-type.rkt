@@ -54,10 +54,15 @@
            [((,x ,s -> ,t) ,env) (well-formed-typeo s env) (well-formed-typeo t `((,x . ,s) . ,env))])
 
 ; env⊢s<:t
-(defrel (subtypingo t s env) (== t s))
+(defmatche (subtypingo _t _s _env)
+           [((,x ,t1 -> ,t2) (,x ,s1 -> ,s2) ,env)
+            (subtypingo t1 s1 env)
+            (subtypingo t2 s2 `((,x . ,t1) . ,env))]
+           [((list ,t) (list ,s) ,env) (subtypingo t s env)]
+           [((,x ,b ,e1) (,x ,b ,e2) ,env) (impo e1 e2 `((,x . ,b) . ,env))])
 
 ; env⊢ s=>t
-(defrel (impo t s env) (== t s))
+(defrel (impo s t env) (== t s))
 
 ; ⊢s:env
 (defrel (closing-substitutiono s env) (== 1 1))
