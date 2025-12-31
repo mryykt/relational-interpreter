@@ -10,6 +10,8 @@
 (defrel
  (typedo _exp env _t)
  (matche (_exp _t)
+         [(⊤ bool)]
+         [(⊥ bool)]
          [((¬ ,e) bool) (typedo e env 'bool)]
          [((,e1 ∧ ,e2) bool) (typedo e1 env 'bool) (typedo e2 env 'bool)]
          [((,e1 = ,e2) bool) (literalo e1) (fresh (t) (typedo e1 env t) (typedo e2 env t))]
