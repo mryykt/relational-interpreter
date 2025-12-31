@@ -13,12 +13,12 @@
  [((char ,_c) ,_e ,t) (base-typeo t 'char)]
  [(true ,_e ,t) (base-typeo t 'bool)]
  [(false ,_e ,t) (base-typeo t 'bool)]
- [(() ,_e (list ,t))]
+ [(() ,_e ,t) (fresh (t^) (base-typeo t `(list ,t^)))]
  [((var ,x) ,env ,t) (lookup-firsto x env t)]
- [((lam ,x ,e) ,env (,x ,s -> ,t)) (well-formed-typeo s env) (typedo e `((,x . ,s) . ,env) t)]
- [((fix ,f ,x ,e) ,env (,x ,s -> ,t))
-  (well-formed-typeo s env)
-  (typedo e `((,f . (,x ,s -> ,t)) (,x . ,s) . ,env) t)]
+ [((lam ,x ,e) ,env (,x ,t1 -> ,t2)) (well-formed-typeo t1 env) (typedo e `((,x . ,t1) . ,env) t2)]
+ [((fix ,f ,x ,e) ,env (,x ,t1 -> ,t2))
+  (well-formed-typeo t1 env)
+  (typedo e `((,f . (,x ,t1 -> ,t2)) (,x . ,t1) . ,env) t2)]
  [((app ,e1 ,e2) ,env ,t) (fresh (s) (typedo e1 env `(x ,s -> ,t)) (typedo e2 env s))] ;TODO
  [((let ,x
      ,e1
@@ -41,17 +41,17 @@
   (base-typeo t 'int)
   (membero op '(+ * -))
   (fresh (s) (typedo e1 env s) (typedo e2 env s) (base-typeo s 'int))]
- [((cons ,e1 ,e2) ,env ,t) (fresh (s) (== t `(list ,s)) (typedo e1 env s) (typedo e2 env `(list ,s)))]
- [((car ,e) ,env ,t) (typedo e env `(list ,t))]
- [((cdr ,e) ,env (list ,t)) (typedo e env `(list ,t))]
+ [((cons ,e1 ,e2) ,env ,t)
+  (fresh (s) (base-typeo t `(list ,s)) (typedo e1 env s) (typedo e2 env `(list ,s)))]
+ [((car ,e) ,env ,t) (fresh (t^) (typedo e env t^) (base-typeo t^ `(list ,t)))]
+ [((cdr ,e) ,env ,t) (fresh (t^) (typedo e env t) (base-typeo t `(list ,t^)))]
  [(,exp ,env ,t) (fresh (s) (typedo exp env s) (subtypingo t s env) (well-formed-typeo t env))])
 
-(defmatche (base-typeo t b) [((,_x ,b ,_exp) ,b) (membero b '(int char bool))])
+(defmatche (base-typeo t b) [((,_x ,b ,_exp) ,b)])
 
 ; env⊢t
 (defmatche (well-formed-typeo _t _env)
            [((,x ,b ,exp) ,env) (c:typedo exp `((,x . ,b) . ,env) 'bool)]
-           [((list ,t) ,env) (well-formed-typeo t env)]
            [((,x ,s -> ,t) ,env) (well-formed-typeo s env) (well-formed-typeo t `((,x . ,s) . ,env))])
 
 ; env⊢s<:t
