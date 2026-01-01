@@ -9,49 +9,59 @@
 (defrel (typedo exp t) (typed-expo exp '() t))
 
 ; env⊢exp:t
-(defmatche
- (typed-expo _exp _env _t)
- [((num ,_n) ,_e ,t) (base-typeo t 'int)]
- [((char ,_c) ,_e ,t) (base-typeo t 'char)]
- [(true ,_e ,t) (base-typeo t 'bool)]
- [(false ,_e ,t) (base-typeo t 'bool)]
- [(() ,_e ,t) (fresh (t^) (base-typeo t `(list ,t^)))]
- [((var ,x) ,env ,t) (lookup-firsto x env t)]
- [((lam ,x ,e) ,env (,x ,t1 -> ,t2))
-  (well-formed-typeo t1 env)
-  (typed-expo e `((,x . ,t1) . ,env) t2)]
- [((fix ,f ,x ,e) ,env (,x ,t1 -> ,t2))
-  (well-formed-typeo t1 env)
-  (typed-expo e `((,f . (,x ,t1 -> ,t2)) (,x . ,t1) . ,env) t2)]
- [((app ,e1 ,e2) ,env ,t) (fresh (s) (typed-expo e1 env `(x ,s -> ,t)) (typed-expo e2 env s))] ;TODO
- [((let ,x
-     ,e1
-     ,e2)
-   ,env
-   ,t)
-  (fresh (s) (typed-expo e1 env s) (typed-expo e2 `((,x . ,s) . ,env) t) (well-formed-typeo t env))]
- [((if ,e1 ,e2 ,e3) ,env ,t)
-  (fresh (t1)
-         (typed-expo e1 env t1)
-         (base-typeo t1 'bool)
-         (typed-expo e2 env t)
-         (typed-expo e3 env t)
-         (well-formed-typeo t env))]
- [((,e1 = ,e2) ,env ,t) (base-typeo t 'bool) (fresh (s) (typed-expo e1 env s) (typed-expo e2 env s))]
- [((,e1 < ,e2) ,env ,t)
-  (base-typeo t 'bool)
-  (fresh (s) (base-typeo s 'int) (typed-expo e1 env s) (typed-expo e2 env s))]
- [((,e1 ,op ,e2) ,env ,t)
-  (base-typeo t 'int)
-  (membero op '(+ * -))
-  (fresh (s) (typed-expo e1 env s) (typed-expo e2 env s) (base-typeo s 'int))]
- [((cons ,e1 ,e2) ,env ,t)
-  (fresh (s) (base-typeo t `(list ,s)) (typed-expo e1 env s) (typed-expo e2 env `(list ,s)))]
- [((car ,e) ,env ,t) (fresh (t^) (typed-expo e env t^) (base-typeo t^ `(list ,t)))]
- [((cdr ,e) ,env ,t) (fresh (t^) (typed-expo e env t) (base-typeo t `(list ,t^)))]
- [(,exp ,env ,t) (fresh (s) (typed-expo exp env s) (subtypingo t s env) (well-formed-typeo t env))])
+(defrel
+ (typed-expo _exp env _t)
+ (matche
+  (_exp _t)
+  [((num ,_n) ,t) (base-typeo t 'int)]
+  [((char ,_c) ,t) (base-typeo t 'char)]
+  [(true ,t) (base-typeo t 'bool)]
+  [(false ,t) (base-typeo t 'bool)]
+  [(() ,t) (fresh (t^) (base-typeo t `(list ,t^)))]
+  [((var ,x) ,t) (lookup-firsto x env t)]
+  [((lam ,x ,e) (,x ,t1 -> ,t2)) (well-formed-typeo t1 env) (typed-expo e `((,x . ,t1) . ,env) t2)]
+  [((fix ,f ,x ,e) (,x ,t1 -> ,t2))
+   (well-formed-typeo t1 env)
+   (typed-expo e `((,f . (,x ,t1 -> ,t2)) (,x . ,t1) . ,env) t2)]
+  [((app ,e1 ,e2) ,t^)
+   (fresh (x s t)
+          (substitutiono x e2 t env t^)
+          (typed-expo e1 env `(,x ,s -> ,t))
+          (typed-expo e2 env s))] ;TODO
+  [((let ,x
+      ,e1
+      ,e2)
+    ,t)
+   (fresh (s) (typed-expo e1 env s) (typed-expo e2 `((,x . ,s) . ,env) t) (well-formed-typeo t env))]
+  [((if ,e1 ,e2 ,e3) ,t)
+   (fresh (t1)
+          (typed-expo e1 env t1)
+          (base-typeo t1 'bool)
+          (typed-expo e2 env t)
+          (typed-expo e3 env t)
+          (well-formed-typeo t env))]
+  [((,e1 = ,e2) ,t) (base-typeo t 'bool) (fresh (s) (typed-expo e1 env s) (typed-expo e2 env s))]
+  [((,e1 < ,e2) ,t)
+   (base-typeo t 'bool)
+   (fresh (s) (base-typeo s 'int) (typed-expo e1 env s) (typed-expo e2 env s))]
+  [((,e1 ,op ,e2) ,t)
+   (base-typeo t 'int)
+   (membero op '(+ * -))
+   (fresh (s) (typed-expo e1 env s) (typed-expo e2 env s) (base-typeo s 'int))]
+  [((cons ,e1 ,e2) ,t)
+   (fresh (s) (base-typeo t `(list ,s)) (typed-expo e1 env s) (typed-expo e2 env `(list ,s)))]
+  [((car ,e) ,t) (fresh (t^) (typed-expo e env t^) (base-typeo t^ `(list ,t)))]
+  [((cdr ,e) ,t) (fresh (t^) (typed-expo e env t) (base-typeo t `(list ,t^)))]
+  [(,exp ,t) (fresh (s) (typed-expo exp env s) (subtypingo t s env) (well-formed-typeo t env))]))
 
-(defmatche (base-typeo t b) [((,_x ,b ,_exp) ,b)])
+(defrel (base-typeo t b) (fresh (x) (== t `(,x ,b ⊤))))
+
+(defrel
+ (substitutiono x e t env t^)
+ (matche (t t^)
+         [((,y ,t1 -> ,t2) (,y ,t1^ -> ,t2^))
+          (conde [(== y x) (== t1 t1^) (== t2 t2^)]
+                 [(=/= y x) (substitutiono x e t1 env t1^) (substitutiono x e t2 env t2^)])])) ;TODO
 
 ; env⊢t
 (defmatche (well-formed-typeo _t _env)
