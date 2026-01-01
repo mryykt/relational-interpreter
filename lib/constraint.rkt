@@ -25,4 +25,4 @@
 
 (defrel (literalo exp) (matche exp [(len ,e) (symbolo e)] [,n (numbero n)] [,x (symbolo x)]))
 
-(defrel (impo e1 e2 env) (== e1 e2))
+(defrel (impo _e1 _e2 env) (matche (_e1 _e2) [(,_e1 ⊤)]))
