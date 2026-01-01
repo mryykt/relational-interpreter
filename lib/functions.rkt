@@ -158,20 +158,19 @@
                                                (app (app (app (var f) (var g)) (var acc2))
                                                     (cdr (var xs))))))))))
 
-(def-list-function
- appendf
- `(let foldr
-    ,foldrf
-    (lam xs (lam ys ,(apps (var foldr) (lam x (lam y (cons (var x) (var y)))) (var ys) (var xs))))))
+(define appendf
+  `(let foldr
+     ,foldrf
+     (lam xs (lam ys ,(apps (var foldr) (lam x (lam y (cons (var x) (var y)))) (var ys) (var xs))))))
 
-(def-list-function concatf (make-program foldlf appendf ,(apps (var foldl) (var append) ())))
+(define concatf (make-program foldlf appendf ,(apps (var foldl) (var append) ())))
 
-(def-list-function lengthf
-                   '(fix f
-                         xs
-                         (if ((var xs) = ())
-                             (num ())
-                             ((num (1)) + (app (var f) (cdr (var xs)))))))
+(define lengthf
+  '(fix f
+        xs
+        (if ((var xs) = ())
+            (num ())
+            ((num (1)) + (app (var f) (cdr (var xs)))))))
 
 (def-list-function filterf
                    `(fix f
