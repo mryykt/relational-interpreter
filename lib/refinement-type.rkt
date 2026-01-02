@@ -64,9 +64,13 @@
                  [(=/= y x) (substitutiono x e t1 env t1^) (substitutiono x e t2 env t2^)])])) ;TODO
 
 ; env⊢t
-(defmatche (well-formed-typeo _t _env)
-           [((,x ,b ,exp) ,env) (r:typedo exp `((,x . ,b) . ,env) 'bool)]
-           [((,x ,s -> ,t) ,env) (well-formed-typeo s env) (well-formed-typeo t `((,x . ,s) . ,env))])
+(defrel (well-formed-typeo _t env)
+        (matche _t
+                [(,x ,b ,exp) (symbolo b) (r:typedo exp `((,x . ,b) . ,env) 'bool)]
+                [(,x (list ,s) ,exp)
+                 (r:typedo exp `((,x . (list ,s)) . ,env) 'bool)
+                 (well-formed-typeo s env)]
+                [(,x ,s -> ,t) (well-formed-typeo s env) (well-formed-typeo t `((,x . ,s) . ,env))]))
 
 ; env⊢s<:t
 (defmatche (subtypingo _t _s _env)
@@ -81,4 +85,14 @@
   (test "well-formed-type-list" (run 1 (_q) (well-formed-typeo '(x (list (y char ⊤)) ⊤) '())) '(_.0))
   (test "well-formed-type-fun"
         (run 1 (_q) (well-formed-typeo '(x (y int ⊤) -> (z bool ⊤)) '()))
+        '(_.0))
+  (test "well-formed-type-with-refinement"
+        (run 1 (_q) (well-formed-typeo '(x int (x <= 0)) '()))
+        '(_.0))
+  (test "well-formed-type-with-refinement"
+        (run 1
+             (_q)
+             (well-formed-typeo
+              '(xs (_1 (list (_2 int ⊤)) ⊤) -> (ys (list (_3 int ⊤)) ((len ys) <= (len xs))))
+              '()))
         '(_.0)))
