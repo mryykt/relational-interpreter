@@ -75,3 +75,10 @@
             (subtypingo t2 s2 `((,x . ,t1) . ,env))]
            [((list ,t) (list ,s) ,env) (subtypingo t s env)]
            [((,x ,b ,e1) (,x ,b ,e2) ,env) (c:impo e1 e2 `((,x . ,b) . ,env))])
+
+(define (run-test)
+  (test "well-formed-type-int" (run 1 (_q) (well-formed-typeo '(x int ⊤) '())) '(_.0))
+  (test "well-formed-type-list" (run 1 (_q) (well-formed-typeo '(x (list (y char ⊤)) ⊤) '())) '(_.0))
+  (test "well-formed-type-fun"
+        (run 1 (_q) (well-formed-typeo '(x (y int ⊤) -> (z bool ⊤)) '()))
+        '(_.0)))
