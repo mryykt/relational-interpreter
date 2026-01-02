@@ -4,7 +4,7 @@
 (require minikanren/matche)
 (require "utils.rkt")
 (require "test-check.rkt")
-(require (prefix-in c: "constraint.rkt"))
+(require (prefix-in r: "refinement.rkt"))
 
 (defrel (typedo exp t) (typed-expo exp '() t))
 
@@ -65,7 +65,7 @@
 
 ; env⊢t
 (defmatche (well-formed-typeo _t _env)
-           [((,x ,b ,exp) ,env) (c:typedo exp `((,x . ,b) . ,env) 'bool)]
+           [((,x ,b ,exp) ,env) (r:typedo exp `((,x . ,b) . ,env) 'bool)]
            [((,x ,s -> ,t) ,env) (well-formed-typeo s env) (well-formed-typeo t `((,x . ,s) . ,env))])
 
 ; env⊢s<:t
@@ -74,7 +74,7 @@
             (subtypingo t1 s1 env)
             (subtypingo t2 s2 `((,x . ,t1) . ,env))]
            [((list ,t) (list ,s) ,env) (subtypingo t s env)]
-           [((,x ,b ,e1) (,x ,b ,e2) ,env) (c:impo e1 e2 `((,x . ,b) . ,env))])
+           [((,x ,b ,e1) (,x ,b ,e2) ,env) (r:impo e1 e2 `((,x . ,b) . ,env))])
 
 (define (run-test)
   (test "well-formed-type-int" (run 1 (_q) (well-formed-typeo '(x int ⊤) '())) '(_.0))
