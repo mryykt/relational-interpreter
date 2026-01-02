@@ -5,6 +5,7 @@
 (require "utils.rkt")
 
 (provide typedo
+         substitutiono
          impo)
 
 (defrel
@@ -23,15 +24,15 @@
          [(,n int) (numbero n)]
          [(,x ,t) (symbolo x) (lookup-firsto x env t)]))
 
-(defrel (substituiono x e _exp _exp^)
+(defrel (substitutiono x e _exp _exp^)
         (matche (_exp _exp^)
                 [(,y ,y^) (== y x) (== y^ e)]
                 [(,y ,y) (=/= y x)]
-                [((¬ ,exp) (¬ ,exp^)) (substituiono x e exp exp^)]
+                [((¬ ,exp) (¬ ,exp^)) (substitutiono x e exp exp^)]
                 [((,e1 ,op ,e2) (,e1^ ,op ,e2^))
                  (membero op '(∧ = <= + - *))
-                 (substituiono x e e1 e1^)
-                 (substituiono x e e2 e2^)]
+                 (substitutiono x e e1 e1^)
+                 (substitutiono x e e2 e2^)]
                 [((len ,xs) (len ,ys)) (== xs x) (== ys e)]))
 
 (defrel (literalo exp) (matche exp [(len ,e) (symbolo e)] [,n (numbero n)] [,x (symbolo x)]))
