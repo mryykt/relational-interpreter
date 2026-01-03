@@ -67,7 +67,8 @@
                  (evalo e1 env v1)
                  (evalo e2 env v2)
                  (project (v1 v2)
-                          (conde [(== (<= v1 v2) #t) (== v '⊤)] [(== (<= v1 v2) #f) (== v '⊥)])))]
+                          (conde [(== (< v1 v2) #t) (== v '⊤)]
+                                 [(== (< v1 v2) #f) (== v '⊥)])))] ;<=を勝手に<に変える^o^
          [((,e1 + ,e2) ,v)
           (fresh (v1 v2) (evalo e1 env v1) (evalo e2 env v2) (project (v1 v2) (== v (+ v1 v2))))]
          [((,e1 - ,e2) ,v)
