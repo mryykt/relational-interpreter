@@ -69,6 +69,7 @@
                 [,_e (not-consto e) (== t t^)]))
 
 ; consで始まる式は定数以外ないものとして扱う
+; 実際にはよくないが，関数以外に制約をつけないので影響はないはず
 (defrel (const-listo xs l)
         (matche xs
                 [() (== l 0)]
