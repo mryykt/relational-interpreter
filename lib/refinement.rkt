@@ -39,7 +39,6 @@
                 [((,e1 ,op ,e2) (,e1^ ,op ,e2^))
                  (membero op '(∧ = <= + - *))
                  (substitutiono x e e1 e1^)
-                 (substitutiono x e e2 e2^)]
-                [((len ,xs) (len ,ys)) (== xs x) (== ys e)]))
+                 (substitutiono x e e2 e2^)]))
 
 (defrel (impo _e1 _e2 env) (matche (_e1 _e2) [(,_e1 ⊤)]))
