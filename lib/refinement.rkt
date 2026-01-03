@@ -44,3 +44,35 @@
 (defrel (literalo e) (matche e [,_e (symbolo e)] [,_e (numbero e)] [(len ,xs) (symbolo xs)]))
 
 (defrel (impo _e1 _e2 env) (matche (_e1 _e2) [(,_e1 ⊤)]))
+
+(defrel
+ (evalo _exp env _v)
+ (matche (_exp _v)
+         [(⊤ ⊤)]
+         [(⊥ ⊥)]
+         [((¬ ,e) ⊥) (evalo e env '⊤)]
+         [((¬ ,e) ⊤) (evalo e env '⊥)]
+         [((,e1 ∧ ,e2) ,v)
+          (fresh (v1 v2)
+                 (evalo e1 env v1)
+                 (evalo e2 env v2)
+                 (matche (v1 v2 v) [(⊤ ⊤ ⊤)] [(⊤ ⊥ ⊥)] [(⊥ ⊤ ⊥)] [(⊥ ⊥ ⊥)]))]
+         [((,e1 = ,e2) ,v)
+          (fresh (v1 v2)
+                 (evalo e1 env v1)
+                 (evalo e2 env v2)
+                 (conde [(== v1 v2) (== v '⊤)] [(=/= v1 v2) (== v '⊥)]))]
+         [((,e1 <= ,e2) ,v)
+          (fresh (v1 v2)
+                 (evalo e1 env v1)
+                 (evalo e2 env v2)
+                 (project (v1 v2)
+                          (conde [(== (<= v1 v2) #t) (== v '⊤)] [(== (<= v1 v2) #f) (== v '⊥)])))]
+         [((,e1 + ,e2) ,v)
+          (fresh (v1 v2) (evalo e1 env v1) (evalo e2 env v2) (project (v1 v2) (== v (+ v1 v2))))]
+         [((,e1 - ,e2) ,v)
+          (fresh (v1 v2) (evalo e1 env v1) (evalo e2 env v2) (project (v1 v2) (== v (- v1 v2))))]
+         [((,e1 * ,e2) ,v)
+          (fresh (v1 v2) (evalo e1 env v1) (evalo e2 env v2) (project (v1 v2) (== v (* v1 v2))))]
+         [(,n ,n) (numbero n)]
+         [(,x ,v) (symbolo x) (lookup-firsto x env v)]))
