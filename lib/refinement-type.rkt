@@ -2,10 +2,12 @@
 
 (require minikanren)
 (require minikanren/matche)
+(require minikanren/numbers)
 (require "utils.rkt")
 (require "test-check.rkt")
 (require (prefix-in r: "refinement.rkt"))
 (require "parse.rkt")
+(require "helper.rkt")
 
 (provide typedo
          typed-expo)
@@ -62,23 +64,29 @@
                 [(num ,n) (fresh (n^) (project (n) (== n^ (unbuild-num n))) (replacemento x n^ t t^))]
                 [true (replacemento x '⊤ t t^)]
                 [false (replacemento x '⊥ t t^)]
-                [(cons ,_a ,_d)
-                 (fresh (l n)
-                        (const-listo e l)
-                        (project (l) (== n (unbuild-num l)) (replacemento '(len ,x) n t t^)))]
+                [() (replacemento `(len ,x) 0 t t^)]
+                [(cons ,_a ,_d) (fresh (l) (const-listo e l) (replacemento `(len ,x) l t t^))]
                 [,_e (not-consto e) (== t t^)]))
 
 ; consで始まる式は定数以外ないものとして扱う
 (defrel (const-listo xs l)
-        (matche xs [()] [(cons ,_a ,d) (fresh (l^) (const-listo d l^) (inco l^ l))]))
+        (matche xs
+                [() (== l 0)]
+                [(cons ,_a ,d) (fresh (l^) (const-listo d l^) (project (l^) (== l (+ l^ 1))))]))
 
 (defrel (not-consto e)
-        (fresh (x y)
-               (=/= e `(num ,x))
-               (=/= e `(char ,x))
-               (=/= e 'true)
-               (=/= e 'false)
-               (=/= e `(cons ,x ,y))))
+        (matche e
+                [(var ,_x)]
+                [(lambda ,_x ,_e)]
+                [(fix ,_f ,_x ,_e)]
+                [(app ,_e1 ,_e2)]
+                [(let ,_x
+                   ,_e1
+                   ,_e2)]
+                [(if ,_e1 ,_e2 ,_e3)]
+                [(,_e1 ,op ,_e2) (membero op '(= < + - *))]
+                [(car ,_e)]
+                [(cdr ,_e)]))
 
 (defrel
  (replacemento x e t t^)
@@ -120,4 +128,19 @@
              (well-formed-typeo
               '(xs (_1 (list (_2 int ⊤)) ⊤) -> (ys (list (_3 int ⊤)) ((len ys) <= (len xs))))
               '()))
-        '(_.0)))
+        '(_.0))
+  (test "substituion-1"
+        (run* (q) (substitutiono 'xs (list-c 1 2 3) '(ys (list (_3 int ⊤)) ((len ys) <= (len xs))) q))
+        '((ys (list (_3 int ⊤)) ((len ys) <= 3))))
+  (test "substituion-2"
+        (run* (q) (substitutiono 'x `(num ,(build-num 3)) '(y int (y <= x)) q))
+        '((y int (y <= 3))))
+  (test "substituion-3"
+        (run* (q)
+              (substitutiono 'xs
+                             (list-c 1 2 3)
+                             '(ys (_1 (list (_2 int ⊤)) ⊤)
+                                  ->
+                                  (zs (list (_3 int ⊤)) ((len zs) <= ((len xs) + (len ys)))))
+                             q))
+        '((ys (_1 (list (_2 int ⊤)) ⊤) -> (zs (list (_3 int ⊤)) ((len zs) <= (3 + (len ys))))))))

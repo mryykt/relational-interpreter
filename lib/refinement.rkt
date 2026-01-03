@@ -33,12 +33,14 @@
 
 (defrel (substitutiono x e _exp _exp^)
         (matche (_exp _exp^)
-                [(,y ,y^) (== y x) (== y^ e)]
-                [(,y ,y) (=/= y x)]
+                [(,y ,y^) (== y x) (literalo y) (== y^ e)]
+                [(,y ,y) (=/= y x) (literalo y)]
                 [((¬ ,exp) (¬ ,exp^)) (substitutiono x e exp exp^)]
                 [((,e1 ,op ,e2) (,e1^ ,op ,e2^))
                  (membero op '(∧ = <= + - *))
                  (substitutiono x e e1 e1^)
                  (substitutiono x e e2 e2^)]))
+
+(defrel (literalo e) (matche e [,_e (symbolo e)] [,_e (numbero e)] [(len ,xs) (symbolo xs)]))
 
 (defrel (impo _e1 _e2 env) (matche (_e1 _e2) [(,_e1 ⊤)]))
