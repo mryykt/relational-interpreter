@@ -43,7 +43,45 @@
 
 (defrel (literalo e) (matche e [,_e (symbolo e)] [,_e (numbero e)] [(len ,xs) (symbolo xs)]))
 
-(defrel (impo _e1 _e2 env) (matche (_e1 _e2) [(,_e1 ⊤)]))
+(defrel
+ (impo _e1 _e2 env)
+ (matche (_e1 _e2) [(,_e1 ⊤)] [(,e1 ,e2) (=/= '⊤ e2) (project (e1 e2 env) (== #t (imp e1 e2 env)))]))
+
+(define (imp e1 e2 env)
+  #t)
+
+(define (eval exp env)
+  (match exp
+    ['⊤ '⊤]
+    ['⊥ '⊥]
+    [(list '¬ e) (if (equal? '⊤ (eval e env)) '⊥ '⊤)]
+    [(list e1 '∧ e2)
+     (let ([v1 (eval e1 env)]
+           [v2 (eval e2 env)])
+       (if (and (equal? '⊤ v1) (equal? '⊤ v2)) '⊤ '⊥))]
+    [(list e1 '= e2)
+     (let ([v1 (eval e1 env)]
+           [v2 (eval e2 env)])
+       (if (equal? v1 v2) '⊤ '⊥))]
+    [(list e1 '<= e2)
+     (let ([v1 (eval e1 env)]
+           [v2 (eval e2 env)])
+       (if (< v1 v2) '⊤ '⊥))]
+    [(list e1 '+ e2) (+ (eval e1 env) (eval e2 env))]
+    [(list e1 '- e2) (- (eval e1 env) (eval e2 env))]
+    [(list e1 '* e2) (* (eval e1 env) (eval e2 env))]
+    [_
+     (cond
+       [(number? exp) exp]
+       [(symbol? exp) (lookup exp env)])]))
+
+(define (lookup x env)
+  (match env
+    ['() '⊥]
+    [(list (cons y v) rest ...)
+     (if (equal? x y)
+         v
+         (lookup x rest))]))
 
 (defrel
  (evalo _exp env _v)
