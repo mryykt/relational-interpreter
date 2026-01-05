@@ -3,6 +3,8 @@
 (require minikanren)
 (require minikanren/matche)
 (require "utils.rkt")
+(require "test-check.rkt")
+(require racket/generator)
 
 (provide typedo
          substitutiono
@@ -48,7 +50,55 @@
  (matche (_e1 _e2) [(,_e1 ⊤)] [(,e1 ,e2) (=/= '⊤ e2) (project (e1 e2 env) (== #t (imp e1 e2 env)))]))
 
 (define (imp e1 e2 env)
-  #t)
+  (let* ([vars (remove-duplicates (get-vars `(,e1 ∧ ,e2)))]
+         [tenv (map (lambda (x) (cons x (lookup x env))))])
+    (for/and ([venv (env-generator tenv)])
+      (if (equal? '⊥ (eval e1 venv))
+          #t
+          (equal? '⊤ (eval e2 venv))))))
+
+(define (get-model exp env)
+  (let ([vars (remove-duplicates (get-vars exp))]) '()))
+
+(define (type-domain ty)
+  (match ty
+    [(list _ 'bool _) '(⊥ ⊤)]
+    [(list _ 'int _) '(0 1 2)]
+    [(list _ (list 'list _) _) '(0 1 2)]))
+
+(define (typed-env->domains tenv)
+  (for/list ([p tenv])
+    (cons (car p) (type-domain (cdr p)))))
+
+(define (env-generator typed-env)
+  (define domains (typed-env->domains typed-env))
+  (define vars (map car domains))
+  (define vals (map cdr domains))
+  (define bases (map length vals))
+  (define max (apply * bases))
+  (generator
+   ()
+   (for ([i (in-range max)])
+     (define env
+       (for/list ([v vars]
+                  [ds vals]
+                  [k (in-naturals)])
+         (cons v (list-ref ds (remainder (quotient i (apply * (take bases k))) (length ds))))))
+     (yield env))))
+
+(define (get-vars exp)
+  (match exp
+    ['⊤ '()]
+    ['⊥ '()]
+    [(list '¬ e) (get-vars e)]
+    [(list e1 op e2)
+     #:when (member op '(∧ = <= + - *))
+     (append (get-vars e1) (get-vars e2))]
+    [(list 'len xs) `(,xs)]
+    [_
+     (cond
+       [(number? exp) '()]
+       [(symbol? exp) `(,exp)])]))
 
 (define (eval exp env)
   (match exp
@@ -70,6 +120,9 @@
     [(list e1 '+ e2) (+ (eval e1 env) (eval e2 env))]
     [(list e1 '- e2) (- (eval e1 env) (eval e2 env))]
     [(list e1 '* e2) (* (eval e1 env) (eval e2 env))]
+    [(list 'len xs)
+     #:when (symbol? xs)
+     (lookup xs env)]
     [_
      (cond
        [(number? exp) exp]
