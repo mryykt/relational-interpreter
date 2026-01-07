@@ -43,7 +43,6 @@
                         (mapo typed-helpero env tenv)
                         (limitedo q tenv t)
                         (evalo (with-functions env (apps ,q input ...)) o)
-                        (debug-trace "1" q o)
                         (== o output)))))]))
 
 (define (run-test)
