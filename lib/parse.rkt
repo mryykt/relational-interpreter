@@ -88,9 +88,29 @@
     [(list e1 op e2)
      #:when (member op '(= < + - * /))
      `(,(unparser e1) ,op ,(unparser e2))]
-    [(list 'cons a d) `(cons ,(unparser a) ,(unparser d))]
+    [(list 'cons a d)
+     (if (constant-list? exp)
+         (cons 'list (cons->list exp))
+         `(cons ,(unparser a) ,(unparser d)))]
     [(list 'car l) `(car ,(unparser l))]
     [(list 'cdr l) `(cdr ,(unparser l))]))
+
+(define (cons->list xs)
+  (match xs
+    ['() '()]
+    [(list 'cons a d) (cons (unparser a) (cons->list d))]))
+
+(define (constant? x)
+  (match x
+    [(list 'num _) #t]
+    [(list 'char _) #t]
+    ['() #t]
+    [(list 'cons y ys) (and (constant? y) (constant-list? ys))]))
+
+(define (constant-list? xs)
+  (match xs
+    ['() #t]
+    [(list 'cons y ys) (and (constant? y) (constant-list? ys))]))
 
 (define (check exp)
   (let ([f (lambda (e)
