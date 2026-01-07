@@ -125,4 +125,4 @@
         (f exp))))
 
 (define (run-test)
-  (count check (run 500 (q) (syntax-checko q))))
+  (count check (run 500 (q) (syntaxo q))))
