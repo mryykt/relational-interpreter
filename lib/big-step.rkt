@@ -6,6 +6,8 @@
 (require "utils.rkt")
 (require "test-check.rkt")
 (require "helper.rkt")
+(require "parse.rkt")
+
 (provide evalo
          eval-expo)
 
@@ -56,93 +58,66 @@
 (defrel (evalo exp v) (eval-expo exp '() v))
 
 (define (run-test)
-  (test "test-fun" (run 1 (q) (evalo `(app (lam x (var x)) (num ,(build-num 1))) q)) '((1)))
-  (test "test-fun-2"
-        (run 1
-             (q)
-             (evalo `(app (app (lam x (lam y (var y))) (num ,(build-num 1))) (num ,(build-num 2))) q))
-        `(,(build-num 2)))
-  (test "test-if-1"
-        (run 1
-             (q)
-             (evalo `(if true
-                         (num ,(build-num 1))
-                         (num ,(build-num 2)))
-                    q))
-        `(,(build-num 1)))
-  (test "test-if-2"
-        (run 1
-             (q)
-             (evalo `(if false
-                         (num ,(build-num 1))
-                         (num ,(build-num 2)))
-                    q))
-        `(,(build-num 2)))
-  (test "test-arithmetic"
-        (run 1
-             (q)
-             (evalo `((num ,(build-num 2))
-                      +
-                      ((num ,(build-num 10)) - ((num ,(build-num 3)) * (num ,(build-num 3)))))
-                    q))
-        `(,(build-num 3)))
+  (test "test-fun" (run 1 (q) (evalo (parser '((lambda (x) x) 1)) q)) '((1)))
+  (test "test-fun-2" (run 1 (q) (evalo (parser '((lambda (x y) y) 1 2)) q)) `(,(build-num 2)))
+  (test "test-if-1" (run 1 (q) (evalo (parser '(if #t 1 2)) q)) `(,(build-num 1)))
+  (test "test-if-2" (run 1 (q) (evalo (parser '(if #f 1 2)) q)) `(,(build-num 2)))
+  (test "test-arithmetic" (run 1 (q) (evalo (parser '(2 + (10 - (3 * 3)))) q)) `(,(build-num 3)))
   (test "test-fix"
         (run 1
              (q)
-             (evalo `(app (fix f
-                               n
-                               (if ((var n) = (num ()))
-                                   (num ,(build-num 1))
-                                   ((var n) * (app (var f) ((var n) - (num ,(build-num 1)))))))
-                          (num ,(build-num 4)))
+             (evalo (parser '((fix f
+                                   (n)
+                                   (if (n = 0)
+                                       1
+                                       (n * (f (n - 1)))))
+                              4))
                     q))
         `(,(build-num 24)))
   (test "test-let-1"
         (run 1
              (q)
-             (evalo `(let x (num
-                             ,(build-num 1))
-                       (var x))
+             (evalo (parser '(let x
+                               1
+                               x))
                     q))
         `(,(build-num 1)))
   (test "test-let-2"
         (run 1
              (q)
-             (evalo `(let f (lam
-                             x
-                             [var x])
-                       (app (var f) (num ,(build-num 1))))
+             (evalo (parser '(let f (lambda
+                                     [x]
+                                     x)
+                               (f 1)))
                     q))
         `(,(build-num 1)))
-  (test "test-eq-1" (run 1 (q) (evalo `((num ,(build-num 10)) = (num ,(build-num 11))) q)) '(false))
-  (test "test-eq-2" (run 1 (q) (evalo `((num ,(build-num 10)) = (num ,(build-num 10))) q)) '(true))
-  (test "test-list" (run 1 (q) (evalo (list-c 1 2 3) q)) `(,(list-v 1 2 3)))
-  (test "test-car" (run 1 (q) (evalo `(car ,(list-c 1 2 3)) q)) `(,(build-num 1)))
-  (test "test-cdr" (run 1 (q) (evalo `(cdr ,(list-c 1 2 3)) q)) `(,(list-v 2 3)))
+  (test "test-eq-1" (run 1 (q) (evalo (parser '(10 = 11)) q)) '(false))
+  (test "test-eq-2" (run 1 (q) (evalo (parser '(10 = 10)) q)) '(true))
+  (test "test-list" (run 1 (q) (evalo (parser '(list 1 2 3)) q)) `(,(list-v 1 2 3)))
+  (test "test-car" (run 1 (q) (evalo (parser '(car (list 1 2 3))) q)) `(,(build-num 1)))
+  (test "test-cdr" (run 1 (q) (evalo (parser '(cdr (list 1 2 3))) q)) `(,(list-v 2 3)))
   (test "test-list-length"
         (run 1
              (q)
-             (evalo `(app (fix f
-                               x
-                               (if ((var x) = ())
-                                   (num ,(build-num 0))
-                                   ((num ,(build-num 1)) + (app (var f) (cdr (var x))))))
-                          ,(list-c 1 2 3))
+             (evalo (parser '((fix f
+                                   (xs)
+                                   (if (xs = ())
+                                       0
+                                       (1 + (f (cdr xs)))))
+                              (list 1 2 3)))
                     q))
         `(,(build-num 3)))
   (test "test-list-append"
         (run 1
              (q)
-             (evalo `(app (app (fix f
-                                    x
-                                    (lam y
-                                         (if ((var x) = ())
-                                             (var y)
-                                             (cons (car (var x))
-                                                   (app (app (var f) (cdr (var x))) (var y))))))
-                               ,(list-c 1 2))
-                          ,(list-c 3))
+             (evalo (parser '((fix f
+                                   (xs ys)
+                                   (if (xs = ())
+                                       ys
+                                       (cons (car xs) (f (cdr xs) ys))))
+                              (list 1 2)
+                              (list 3)))
                     q))
         `(,(list-v 1 2 3)))
-  (test "test- <" (run 1 (q) (evalo `((num ,(build-num 1)) < (num ,(build-num 2))) q)) '(true))
-  (test "test- <" (run 1 (q) (evalo `((num ,(build-num 2)) < (num ,(build-num 1))) q)) '(false)))
+  (test "test- <" (run 1 (q) (evalo (parser '(1 < 2)) q)) '(true))
+  (test "test- <" (run 1 (q) (evalo (parser '(2 < 1)) q)) '(false)))
