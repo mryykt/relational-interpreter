@@ -41,6 +41,7 @@
     [(list 'cdr l) `(cdr ,(parser l))]
     [(list 'list e ...) (foldr (lambda (x acc) `(cons ,x ,acc)) '() (map parser e))]
     [(list e ...) (app (map parser e))]
+    [(vector (list 'unbound) _ _) exp]
     [_
      (cond
        [(symbol? exp) `(var ,exp)]
