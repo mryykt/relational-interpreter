@@ -51,7 +51,7 @@
 
 (define (imp e1 e2 env)
   (let* ([vars (remove-duplicates (get-vars `(,e1 ∧ ,e2)))]
-         [tenv (map (lambda (x) (cons x (lookup x env))))])
+         [tenv (map (lambda (x) (cons x (lookup x env))) vars)])
     (for/and ([venv (env-generator tenv)])
       (if (equal? '⊥ (eval e1 venv))
           #t
@@ -76,8 +76,7 @@
   (define vals (map cdr domains))
   (define bases (map length vals))
   (define max (apply * bases))
-  (generator
-   ()
+  (in-generator
    (for ([i (in-range max)])
      (define env
        (for/list ([v vars]
@@ -168,3 +167,15 @@
           (fresh (v1 v2) (evalo e1 env v1) (evalo e2 env v2) (project (v1 v2) (== v (* v1 v2))))]
          [(,n ,n) (numbero n)]
          [(,x ,v) (symbolo x) (lookup-firsto x env v)]))
+
+(define (run-test)
+  (test "get-vars" (get-vars '((len zs) <= ((len xs) + (len ys)))) '(zs xs ys))
+  (test "imp-1"
+        (imp '((x <= y) ∧ (y <= z)) '(x <= z) '((x . (_ int ⊤)) (y . (_ int ⊤)) (z . (_ int ⊤))))
+        #t)
+  (test "imp-2"
+        (imp '((x <= y) ∧ (y <= z)) '(z <= x) '((x . (_ int ⊤)) (y . (_ int ⊤)) (z . (_ int ⊤))))
+        #f)
+  (test "imp-2"
+        (imp '((x <= y) ∧ (y <= z)) '(z <= x) '((x . (_ int ⊤)) (y . (_ int ⊤)) (z . (_ int ⊤))))
+        #f))
