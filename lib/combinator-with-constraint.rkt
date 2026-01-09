@@ -18,30 +18,50 @@
                 [(num ())]
                 [(num (1))]))
 
+(defrel
+ (constrainto exp t v)
+ (matche
+  (exp t)
+  [((app (app (var map) ,_g) ,l) (list ,_t^))
+   (fresh (v^ n) (evalo l v^) (lengtho v^ n) (lengtho v n))]
+  [((app (app (var filter) ,_p) ,l) (list ,_t^))
+   (fresh (v^ n m) (evalo l v^) (lengtho v^ n) (lengtho v m) (<o v v^))]
+  [((app (app (app (app (var compose) ,f) ,_g) ,_x) ,l) (list ,_t^))
+   (fresh (h) (constrainto `((app ,f ,h) ,l) t v))]
+  [((app (app (var foldlEmpty) ,f) (cons ,a ,d)) (list ,_t)) (constrainto `(app (app ,f ,d) ,a) t v)]
+  [((app (app (var foldrEmpty) ,f) (cons ,a ,d)) (list ,_t)) (constrainto `(app (app ,f ,a) ,d) t v)]
+  [((app (app (var cons) ,_a) ,d) (list ,_t^))
+   (fresh (v^ n n^) (evalo d v^) (lengtho v^ n^) (lengtho v n) (inco n^ n))]
+  [((app (app (app (var flip) ,f) ,x) ,y) ,_t) (constrainto `(app (app ,f ,y) ,x) t v)]))
+
 (defrel (typed-helpero ne nt)
         (matche ne [(,name . ,body) (fresh (t) (typedo body '() t) (== nt `(,name . ,t)))]))
 
 (define-syntax synthesis
   (syntax-rules ()
-    [(_ 1 t (input ...) output)
+    [(_ t (input ...) output)
      (map unparser
           (run 1
                (q)
-               (fresh (env tenv)
+               (fresh (env tenv exp)
                       (mapo typed-helpero all-functions-list tenv)
+                      (== exp (apps ,q input ...))
                       (translateo q)
-                      (typedo (apps ,q input ...) tenv t)
-                      (evalo (with-all-functions (apps ,q input ...)) output))))]
+                      (constrainto exp t output)
+                      (typedo exp tenv t)
+                      (evalo (with-all-functions exp) output))))]
     [(_ t (function ...) (input ...) output)
      (let ([env (append `((,(symbol-trim-last 'function) . ,function) ...) all-basic-functions)])
        (map unparser
             (run 1
                  (q)
-                 (fresh (tenv)
+                 (fresh (tenv exp)
                         (mapo typed-helpero env tenv)
+                        (== exp (apps ,q input ...))
                         (translateo q)
-                        (typedo (apps ,q input ...) tenv t)
-                        (evalo (with-functions env (apps ,q input ...)) output)))))]))
+                        (constrainto exp t output)
+                        (typedo exp tenv t)
+                        (evalo (with-functions env exp) output)))))]))
 
 (define (run-test)
   (test "reverse"
