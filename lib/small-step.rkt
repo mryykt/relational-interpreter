@@ -138,4 +138,15 @@
   (test "test- <" (run 1 (q) (evalo (parser '(2 < 1)) q)) '(false))
   (test "fill-1" (run 1 (q) (evalo (parser `(,q + 2)) (build-num 3))) '((num (1))))
   (test "fill-2" (run 2 (q) (evalo (parser `(,q < 2)) 'true)) '((num ()) (num (1))))
-  (test "fill-3" (run 20 (q) (evalo (parser `((lambda (x) ,q) 999)) (build-num 1000))) '()))
+  (test "fill-3" (run 20 (q) (evalo (parser `((lambda (x) ,q) 999)) (build-num 1000))) '())
+  (test "test-fun-2" (run* (q) (eval-stepo (parser '((lambda (x y) y) 1 2)) q)) `(,(build-num 2)))
+  (test "test-step-2"
+        (run* (q)
+              (eval-stepo (parser '(let square (lambda
+                                                [x]
+                                                [x
+                                                 *
+                                                 x])
+                                     (square 2)))
+                          q))
+        `(,(build-num 4))))
