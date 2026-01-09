@@ -1,4 +1,5 @@
 #lang racket
+
 (require minikanren)
 (require minikanren/matche)
 (require minikanren/numbers)
@@ -18,13 +19,13 @@
                 [(false false)]
                 [(() ())]
                 [((var ,x) ,v) (symbolo x) (lookup-firsto x env v)]
-                [((lam ,x ,e) ((0 ,x ,e) . ,env^)) (== env env^)]
-                [((fix ,f ,x ,e) ((,f ,x ,e) . ,env^)) (== env env^)]
+                [((lam ,x ,e) (closure 0 ,x ,e ,env^)) (== env env^)]
+                [((fix ,f ,x ,e) (closure ,f ,x ,e ,env^)) (== env env^)]
                 [((app ,e1 ,e2) ,v)
                  (fresh (f x e env^ v^)
-                        (eval-expo e1 env `((,f ,x ,e) . ,env^))
+                        (eval-expo e1 env `(closure ,f ,x ,e ,env^))
                         (eval-expo e2 env v^)
-                        (eval-expo e `((,f . ((,f ,x ,e) . ,env^)) (,x . ,v^) . ,env^) v))]
+                        (eval-expo e `((,f . (closure ,f ,x ,e ,env^)) (,x . ,v^) . ,env^) v))]
                 [((let ,x
                     ,e1
                     ,e2)
