@@ -11,6 +11,8 @@
          rembero
          appendo
          lengtho
+         takeo
+         dropo
          lookup-firsto
          lookup2o
          mapo
@@ -52,6 +54,15 @@
 (define (appendo l s out)
   (conde ((== l '()) (== s out))
          ((fresh (ca cd tl) (conso ca cd l) (conso ca tl out) (appendo cd s tl)))))
+
+(define (takeo n l out)
+  (conde [(== n '()) (== out '())]
+         [(=/= n '())
+          (fresh (n^ a d out^) (deco n n^) (conso a d l) (conso a out^ out) (takeo n^ d out^))]))
+
+(define (dropo n l out)
+  (conde [(== n '()) (== out l)]
+         [(=/= n '()) (fresh (n^ d) (deco n n^) (cdro d l) (dropo n^ d out))]))
 
 (defmatche (lengtho xs n) [(() ())] [((,_a . ,d) ,n) (fresh (n^) (lengtho d n^) (inco n^ n))])
 
