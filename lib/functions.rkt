@@ -183,27 +183,6 @@
                                         (cons (car (var xs)) (var tail))
                                         (var tail)))))))
 
-; advanced list functions
-(def-advanced-list-function
- mergef
- (make-program concatf
-               mapf
-               lengthf
-               filterf
-               notf
-               (fix f
-                    g
-                    (lam xs
-                         (if ((var xs) = ())
-                             ()
-                             (let temp ,(apps (var filter)
-                                              (lam x (app (var not) ((var x) = ())))
-                                              (app [var g] [var xs]))
-                               (if ((app (var length) (var temp)) = (num (1)))
-                                   (car (var temp))
-                                   (app (var concat)
-                                        ,(apps (var map) (app (var f) (var g)) (var temp))))))))))
-
 ; foldl g []
 
 (def-advanced-list-function foldrEmptyf
@@ -215,27 +194,6 @@
 (def-advanced-list-function foldr0f (make-program foldrf ,(parser '(lambda (g xs) (foldr g 0 xs)))))
 
 (def-advanced-list-function foldl0f (make-program foldlf ,(parser '(lambda (g xs) (foldl g 0 xs)))))
-
-(def-advanced-list-function
- noEmptyf
- `(fix f
-       g
-       (lam x
-            (lam xs
-                 (if ((var xs) = ())
-                     (cons (var x) ())
-                     ,(apps (var g) (app (var f) (var g)) (var x) (car (var xs)) (cdr (var xs))))))))
-
-(def-advanced-list-function
- sortHelperf
- `(lam g
-       (lam h
-            (lam x
-                 (lam y
-                      (lam ys
-                           (if ,(apps (var g) (var x) (var y))
-                               (cons (var x) (cons (var y) (var ys)))
-                               (cons (var y) ,(apps (var h) (var x) (var ys))))))))))
 
 (define (run-test)
   (test
@@ -295,36 +253,6 @@
                      ,(apps (var filter) (lam x ((var x) = (num ()))) ,(list-c 1 0 0 1 0 1 1 0)))
                     q))
         `(,(list-v 0 0 0 0)))
-  (test
-   "merge"
-   (run 1
-        (q)
-        (evalo (make-program mergef
-                             ,(apps (var merge)
-                                    (lam xs (cons (cons (car (var xs)) ()) (cons (cdr (var xs)) ())))
-                                    ,(list-c 1 2 3)))
-               q))
-   `(,(list-v 1 2 3)))
-  (test "qsort"
-        (run 1
-             (q)
-             (evalo (make-program
-                     mergef
-                     notf
-                     filterf
-                     ,(apps (var merge)
-                            (lam xs
-                                 (cons ,(apps (var filter)
-                                              (lam x (app (var not) ((car (var xs)) < (var x))))
-                                              (cdr (var xs)))
-                                       (cons (cons (car (var xs)) ())
-                                             (cons ,(apps (var filter)
-                                                          (lam x ((car (var xs)) < (var x)))
-                                                          (cdr (var xs)))
-                                                   ()))))
-                            ,(list-c 3 1 2 6 7 4 5)))
-                    q))
-        `(,(list-v 1 2 3 4 5 6 7)))
   (test "foldrEmpty"
         (run 1
              (q)
@@ -332,16 +260,4 @@
                      foldrEmptyf
                      ,(apps (var foldrEmpty) (lam x (lam y (cons (var x) (var y)))) ,(list-c 1 2)))
                     q))
-        `(,(list-v 1 2)))
-  (test "insert_sort"
-        (run 1
-             (q)
-             (evalo (make-program foldrEmptyf
-                                  noEmptyf
-                                  sortHelperf
-                                  ltf
-                                  ,(apps (var foldrEmpty)
-                                         (app (var noEmpty) (app (var sortHelper) (var lt)))
-                                         ,(list-c 3 1 2 6 7 4 5)))
-                    q))
-        `(,(list-v 1 2 3 4 5 6 7))))
+        `(,(list-v 1 2))))

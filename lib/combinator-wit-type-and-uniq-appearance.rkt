@@ -71,14 +71,6 @@
   (test "sum"
         (synthesis 1 (q) '((list int) -> int) (foldlf) (,(list-c 1 2 3)) (build-num 6))
         '((foldl add 0)))
-  (test "isort"
-        (synthesis 1
-                   (q)
-                   '((list int) -> (list int))
-                   (noEmptyf sortHelperf foldrEmptyf)
-                   (,(list-c 3 1 2))
-                   (list-v 1 2 3))
-        '((foldrEmpty (noEmpty (sortHelper lt)))))
   (test "adds"
         (synthesis 1
                    (q)

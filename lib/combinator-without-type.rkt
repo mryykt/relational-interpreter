@@ -36,7 +36,4 @@
         [0f '(lam x (num ()))])
     (test "sum"
           (synthesis 1 (q) (foldlf addf 0f) (,(list-c 1 2 3)) (build-num 6))
-          `(,(parser '(foldl add (|0| ()))))))
-  (test "isort"
-        (synthesis 1 (q) (noEmptyf sortHelperf ltf fromHeadf) (,(list-c 3 1 2)) (list-v 1 2 3))
-        `(,(parser '(fromHead (noEmpty (sortHelper lt)))))))
+          `(,(parser '(foldl add (|0| ())))))))
