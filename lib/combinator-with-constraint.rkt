@@ -9,6 +9,7 @@
 (require "test-check.rkt")
 (require "utils.rkt")
 (require "parse.rkt")
+(require "example.rkt")
 
 (defrel (translateo exp)
         (matche exp
@@ -46,14 +47,14 @@
                                        [(constrainto `(app ,f ,y) env t v)])]
                                [(=/= t t^)]))]
                 [((app (app (app (var foldl) ,f) ,acc) (cons ,a ,d)) (list ,t^))
-                 (fresh (t^^) (typedo a '() t^^) (type-depth-leo t^^ t^))
+                 (typedo a '() t^)
                  (fresh (v^ v^^ l)
                         (evalo acc v^)
                         (lengtho v^ l)
                         (dropo l v v^^)
                         (constrainto `(app (app ,f ,d) ,a) env t v^^))]
                 [((app (app (app (var foldr) ,f) ,acc) (cons ,a ,d)) (list ,t^))
-                 (fresh (t^^) (typedo a '() t^^) (type-depth-leo t^^ t^))
+                 (typedo a '() t^)
                  (fresh (v^ v^^ l)
                         (evalo acc v^)
                         (lengtho v^ l)
@@ -64,13 +65,13 @@
                 [((app (app (var filter) ,_p) ,l) (list ,_t^))
                  (fresh (v^ n m) (evalo l v^) (lengtho v^ n) (lengtho v m) (<o m n))]
                 [((app (app (var foldlEmpty) ,f) (cons ,a ,d)) (list ,t^))
-                 (fresh (t^^) (typedo a '() t^^) (type-depth-leo t^^ t^))
+                 (typedo a '() t^)
                  (constrainto `(app (app ,f ,d) ,a) env t v)]
                 [((app (app (var foldlEmpty) ,_f) (cons ,a ,_d)) (list ,t^))
                  (symbolo t^)
                  (fresh (t^^) (typedo a '() `(list ,t^^)) (type-depth-leo t^^ t^))]
                 [((app (app (var foldrEmpty) ,f) (cons ,a ,d)) (list ,t^))
-                 (fresh (t^^) (typedo a '() t^^) (type-depth-leo t^^ t^))
+                 (typedo a '() t^)
                  (constrainto `(app (app ,f ,a) ,d) env t v)]
                 [((app (app (var foldrEmpty) ,_f) (cons ,a ,_d)) (list ,t^))
                  (symbolo t^)
@@ -84,61 +85,23 @@
 (defrel (typed-helpero ne nt)
         (matche ne [(,name . ,body) (fresh (t) (typedo body '() t) (== nt `(,name . ,t)))]))
 
-(define-syntax synthesis
-  (syntax-rules ()
-    [(_ t (input ...) output)
-     (map unparser
-          (run 1
-               (q)
-               (fresh (env tenv exp)
-                      (mapo typed-helpero all-functions-list tenv)
-                      (== exp (apps ,q input ...))
-                      (translateo q)
-                      (constrainto exp tenv t output)
-                      (typedo exp tenv t)
-                      (evalo (with-all-functions exp) output))))]
-    [(_ t (function ...) (input ...) output)
-     (let ([env (append `((,(symbol-trim-last 'function) . ,function) ...) all-basic-functions)])
-       (map unparser
-            (run 1
-                 (q)
-                 (fresh (tenv exp)
-                        (mapo typed-helpero env tenv)
-                        (== exp (apps ,q input ...))
-                        (translateo q)
-                        (typedo exp tenv t)
-                        (constrainto exp tenv t output)
-                        (evalo (with-functions env exp) output)))))]))
-
-(define (run-test)
-  (test "reverse"
-        (synthesis '(list char) (foldlEmptyf) (,(string-c "hello")) (string-v "olleh"))
-        '((foldlEmpty (flip cons))))
-  (test "append"
-        (synthesis '(list char)
-                   (foldrf)
-                   (,(string-c "hello ") ,(string-c "world"))
-                   (string-v "hello world"))
-        '((flip (foldr cons))))
-  (test "concat"
-        (synthesis '(list char)
-                   (foldrf foldrEmptyf)
-                   (,(list-c "hello" " " "world"))
-                   (string-v "hello world"))
-        '((foldrEmpty (flip (foldr cons)))))
-  (test "sum" (synthesis 'int (foldlf) (,(list-c 1 2 3)) (build-num 6)) '((foldl add 0)))
-  (test "adds"
-        (synthesis '(list int) (mapf) ((num ,(build-num 5)) ,(list-c 1 2 3)) (list-v 6 7 8))
-        '((compose map add)))
-  (test "length"
-        (synthesis 'int (foldr0f) (,(string-c "123")) (build-num 3))
-        '((foldr0 (const (add 1)))))
-  (test "rember"
-        (synthesis '(list char) (filterf) ((char #\o) ,(string-c "hello")) (string-v "hell"))
-        '((compose filter neq)))
-  (test "maximize" (synthesis 'int (foldr1f) (,(list-c 1 2 3 2 1)) (build-num 3)) '((foldr1 max)))
-  (test "minimize" (synthesis 'int (foldr1f) (,(list-c 3 2 5 2 3)) (build-num 2)) '((foldr1 min)))
-  (test "uniq"
-        (synthesis '(list char) (foldrEmptyf filterf) (,(string-c "aaabbc")) (string-v "abc"))
-        '((foldrEmpty (fork cons (compose filter neq)))))
-  (test "last" (synthesis 'char (foldr1f) (,(string-c "hello")) '(char #\o)) '(foldr1 (flip const))))
+(define (run-synthesis)
+  (define (appi e is)
+    (if (null? is)
+        e
+        (appi `(app ,e ,(car is)) (cdr is))))
+  (define (f name e fs t i o)
+    (test name
+          (let ([env (append fs all-basic-functions)])
+            (map unparser
+                 (run 1
+                      (q)
+                      (fresh (tenv exp)
+                             (mapo typed-helpero env tenv)
+                             (== exp (appi q i))
+                             (translateo q)
+                             (typedo exp tenv t)
+                             (constrainto exp tenv t o)
+                             (evalo (with-functions env exp) o)))))
+          `(,e)))
+  (for-each (lambda (example) (apply f example)) examples))

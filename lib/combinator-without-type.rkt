@@ -1,39 +1,35 @@
 #lang racket
-
 (require minikanren)
 (require minikanren/matche)
 (require minikanren/numbers)
 (require "big-step.rkt")
 (require "functions.rkt")
 (require "helper.rkt")
-(require "type-inference.rkt")
 (require "test-check.rkt")
-(require "utils.rkt")
 (require "parse.rkt")
+(require "example.rkt")
 
 (defrel (translateo exp)
-        (matche exp [(app ,u ,v) (translateo u) (translateo v)] [(var ,u) (symbolo u)] [()]))
+        (matche exp
+                [(app ,e1 ,e2) (translateo e1) (translateo e2)]
+                [(var ,v) (symbolo v)]
+                [()]
+                [(num ())]
+                [(num (1))]))
 
-(define-syntax synthesis
-  (syntax-rules ()
-    [(_ n (q) (input ...) output)
-     (run n (q) (fresh (env) (translateo q) (evalo (with-all-functions (apps ,q input ...)) output)))]
-    [(_ n (q) (function ...) (input ...) output)
-     (let ([env `((,(symbol-trim-last 'function) . ,function) ...)])
-       (run n (q) (translateo q) (evalo (with-functions env (apps ,q input ...)) output)))]))
-
-(define (run-test)
-  (test "reverse"
-        (synthesis 1 (q) (foldlf flipf consf) (,(list-c 1 2)) (list-v 2 1))
-        `(,(parser '(foldl (flip cons) ()))))
-  (test "append"
-        (synthesis 1 (q) (foldrf consf flipf) (,(list-c 1 2) ,(list-c 3 4)) (list-v 1 2 3 4))
-        `(,(parser '(flip (foldr cons)))))
-  (test "concat"
-        (synthesis 1 (q) (foldrf foldlf flipf consf) (,(list-c '(1 2) '(3 4))) (list-v 1 2 3 4))
-        `(,(parser '(foldl (flip (foldr cons)) ()))))
-  (let ([addf '(lam x (lam y ((var x) + (var y))))]
-        [0f '(lam x (num ()))])
-    (test "sum"
-          (synthesis 1 (q) (foldlf addf 0f) (,(list-c 1 2 3)) (build-num 6))
-          `(,(parser '(foldl add (|0| ())))))))
+(define (run-synthesis)
+  (define (appi e is)
+    (if (null? is)
+        e
+        (appi `(app ,e ,(car is)) (cdr is))))
+  (define (f name e fs _ i o)
+    (test
+     name
+     (let ([env (append fs all-basic-functions)])
+       (map
+        unparser
+        (run 1
+             (q)
+             (fresh (exp) (== exp (appi q i)) (translateo q) (evalo (with-functions env exp) o)))))
+     `(,e)))
+  (for-each (lambda (example) (apply f example)) examples))
