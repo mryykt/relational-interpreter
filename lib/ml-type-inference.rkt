@@ -83,40 +83,32 @@
                 [((cdr ,e) (cdr ,e^)) (replaceo x r e e^)]))
 
 (define (run-test)
-  (test "test-num" (run 1 (q) (typedo `(num ,(build-num 1)) '() q)) '(int))
-  (test "test-fun" (run 1 (q) (typedo '(app (lam x (var x)) (num ())) '() q)) '(int))
+  (test "test-num" (run 1 (q) (typedo (parser 1) '() q)) '(int))
+  (test "test-fun" (run 1 (q) (typedo (parser '((lambda (x) x) 0)) '() q)) '(int))
   (test "test-fix"
         (run 1
              (q)
-             (typedo `(app (fix f
-                                n
-                                (if ((var n) = (num ()))
-                                    (num ,(build-num 1))
-                                    ((var n) * (app (var f) ((var n) - (num ,(build-num 1)))))))
-                           (num ,(build-num 4)))
+             (typedo (parser '((fix f
+                                    (n)
+                                    (if (n = 0)
+                                        1
+                                        (n * (f (n - 1)))))
+                               4))
                      '()
                      q))
         '(int))
-  (test "test-arithmetic"
-        (run 1
-             (q)
-             (typedo `((num ,(build-num 2))
-                       +
-                       ((num ,(build-num 10)) - ((num ,(build-num 3)) * (num ,(build-num 3)))))
-                     '()
-                     q))
-        '(int))
+  (test "test-arithmetic" (run 1 (q) (typedo (parser '(2 + (10 - (3 * 3)))) '() q)) '(int))
   (test "test-list"
-        (run 1 (q) (typedo `(app (lam x (cons (car (var x)) (cdr (var x)))) ,(list-c 1)) '() q))
+        (run 1 (q) (typedo (parser '((lambda (x) (cons (car x) (cdr x))) (list 1))) '() q))
         '((list int)))
   (test "test-let"
         (run 1
              (q)
-             (typedo `(let x (num
-                              ,(build-num 1))
-                        (let y (num
-                                ,(build-num 1))
-                          ((var x) + (var y))))
+             (typedo (parser '(let x
+                                1
+                                (let y
+                                  1
+                                  (x + y))))
                      '()
                      q))
         '(int))
