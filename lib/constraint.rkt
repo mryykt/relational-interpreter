@@ -11,6 +11,8 @@
 (require "parse.rkt")
 (require "example.rkt")
 
+(provide constrainto)
+
 (defrel (translateo exp)
         (matche exp
                 [(app ,e1 ,e2) (translateo e1) (translateo e2)]

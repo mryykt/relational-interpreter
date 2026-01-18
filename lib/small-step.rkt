@@ -8,7 +8,8 @@
 (require "functions.rkt")
 (require "parse.rkt")
 
-(provide evalo)
+(provide evalo
+         eval-expo)
 
 (defrel (evalo exp val) (eval-expo exp '() val))
 

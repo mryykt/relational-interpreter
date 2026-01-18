@@ -12,31 +12,31 @@
 
 (defrel
  (typedo exp env t)
- (matche
-  exp
-  [(num ,_n) (== t 'int)]
-  [(char ,_c) (== t 'char)]
-  [true (== t 'bool)]
-  [false (== t 'bool)]
-  [() (fresh (t^) (== t `(list ,t^)))]
-  [(var ,x) (symbolo x) (lookup-firsto x env t)]
-  [(lam ,x ,e) (fresh (a b) (typedo e `((,x . ,a) . ,env) b) (== t `(,a -> ,b)))]
-  [(fix ,f ,x ,e)
-   (fresh (a b) (typedo e `((,f . (,a -> ,b)) . ((,x . ,a) . ,env)) b) (== t `(,a -> ,b)))]
-  [(app ,e1 ,e2) (fresh (a) (typedo e1 env `(,a -> ,t)) (typedo e2 env a))]
-  [(if ,e1 ,e2 ,e3) (typedo e1 env 'bool) (typedo e2 env t) (typedo e3 env t)]
-  [(let ,x
-     ,e1
-     ,e2)
-   (fresh (e2^ te1) (typedo e1 env te1) (replaceo x e1 e2 e2^) (typedo e2^ `((,x . ,te1) . ,env) t))]
-  [(,e1 = ,e2) (fresh (a) (typedo e1 env a) (typedo e2 env a)) (== t 'bool)]
-  [(,e1 < ,e2) (typedo e1 env 'int) (typedo e2 env 'int) (== t 'bool)]
-  [(,e1 + ,e2) (typedo e1 env 'int) (typedo e2 env 'int) (== t 'int)]
-  [(,e1 - ,e2) (typedo e1 env 'int) (typedo e2 env 'int) (== t 'int)]
-  [(,e1 * ,e2) (typedo e1 env 'int) (typedo e2 env 'int) (== t 'int)]
-  [(cons ,e1 ,e2) (fresh (t^) (typedo e1 env t^) (typedo e2 env `(list ,t^)) (== t `(list ,t^)))]
-  [(car ,e) (typedo e env `(list ,t))]
-  [(cdr ,e) (typedo e env t) (caro 'list t)]))
+ (matche exp
+         [(num ,_n) (== t 'int)]
+         [(char ,_c) (== t 'char)]
+         [true (== t 'bool)]
+         [false (== t 'bool)]
+         [() (fresh (t^) (== t `(list ,t^)))]
+         [(var ,x) (symbolo x) (lookup-firsto x env t)]
+         [(lam ,x ,e) (fresh (a b) (typedo e `((,x . ,a) . ,env) b) (== t `(,a -> ,b)))]
+         [(fix ,f ,x ,e)
+          (fresh (a b) (typedo e `((,f . (,a -> ,b)) . ((,x . ,a) . ,env)) b) (== t `(,a -> ,b)))]
+         [(app ,e1 ,e2) (fresh (a) (typedo e1 env `(,a -> ,t)) (typedo e2 env a))]
+         [(if ,e1 ,e2 ,e3) (typedo e1 env 'bool) (typedo e2 env t) (typedo e3 env t)]
+         [(let ,x
+            ,e1
+            ,e2)
+          (fresh (e2^) (replaceo x e1 e2 e2^) (typedo e2^ env t))]
+         [(,e1 = ,e2) (fresh (a) (typedo e1 env a) (typedo e2 env a)) (== t 'bool)]
+         [(,e1 < ,e2) (typedo e1 env 'int) (typedo e2 env 'int) (== t 'bool)]
+         [(,e1 + ,e2) (typedo e1 env 'int) (typedo e2 env 'int) (== t 'int)]
+         [(,e1 - ,e2) (typedo e1 env 'int) (typedo e2 env 'int) (== t 'int)]
+         [(,e1 * ,e2) (typedo e1 env 'int) (typedo e2 env 'int) (== t 'int)]
+         [(cons ,e1 ,e2)
+          (fresh (t^) (typedo e1 env t^) (typedo e2 env `(list ,t^)) (== t `(list ,t^)))]
+         [(car ,e) (typedo e env `(list ,t))]
+         [(cdr ,e) (typedo e env t) (caro 'list t)]))
 
 (defrel (replaceo x r _e _e^)
         (matche (_e _e^)
